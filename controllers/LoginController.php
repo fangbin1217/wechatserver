@@ -151,8 +151,14 @@ class LoginController extends Controller
     }
 
     public function actionTest() {
-        $a = Users::saveQrcode(2);
-        print_r($a);
+        $params = [
+            ['user_id'=>1, 'score'=>'49'],['user_id'=>2, 'score'=>41],
+            ['user_id'=>3, 'score'=>'-30'],['user_id'=>4, 'score'=>-70],['user_id'=>0, 'score'=>10],
+
+        ];
+        $isSave = (new Users())->queryStarting(1);
+        print_r($isSave);
+        exit;
     }
 
 

@@ -8,5 +8,6 @@ return [
     'appsercet' => '1f391c7cedf7862260078eba1924d31d',
     'randkey' => 'GR511M',
     'loginCacheTime' => 86400, //登陆状态记录时间，单位为秒
-    'withoutlogin' => ['login']
+    'withoutlogin' => ['login'],
+    'serverHost' => 'http://www.wechatserver.com/'
 ];
