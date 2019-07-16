@@ -8,6 +8,8 @@ class Users  extends \yii\db\ActiveRecord
 
     static $error_msg = '';
 
+
+
     /**
      * {@inheritdoc}
      */
@@ -79,7 +81,7 @@ class Users  extends \yii\db\ActiveRecord
         return '';
     }
 
-    static public function saveQrcode($scene = 2) {
+    static public function saveQrcode($scene = 0) {
         $xcx = Users::createXCX();
         if (!$xcx) {
             return '';
@@ -270,37 +272,52 @@ class Users  extends \yii\db\ActiveRecord
             $times = 1;
 
             $totalScore = 0;
-            foreach ($params as $val) {
 
-                if(!isset($val['user_id']) || !isset($val['score'])) {
-                    Users::$error_msg = 'user_id 或score缺失';
+            $isEveryZero = 0;
+            foreach ($params as $val) {
+                if(!isset($val['user_id']) || !isset($val['score']) || !isset($val['zf_index'])) {
+                    Users::$error_msg = '入参格式不合法';
                     return false;
                 }
 
+                if (!$val['score']) {
+                    $isEveryZero += 1;
+                }
+
+
                 $val['user_id'] = (int) $val['user_id'];
+                $val['score'] = (int) $val['score'];
+                if ($val['zf_index'] == 1) {
+                    $val['score'] = -$val['score'];
+                }
                 $totalScore += $val['score'];
                 if ($i == 0) {
-                    $my = RoomUsers::find()->where(['user_id'=>$val['user_id'], 'is_del'=>0])->orderBy('id', 'DESC')->asArray()->one();
+                    $my = RoomUsers::find()->where(['user_id'=>$val['user_id'], 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
                     if ($my) {
                         $room_id = $my['room_id'];
 
                         $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
                         if (!$Rooms) {
-                            Users::$error_msg = '该用户所在房间不是准备中或进行中';
+                            Users::$error_msg = '房间状态已结束';
                             return false;
                         }
-                        $times += Scores::find()->where(['room_id'=>$room_id, 'user_id'=>$val['user_id'], 'is_del'=>0])->count();
+
                     }
                 }
 
+                $maxScore = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+                if ($maxScore) {
+                    $times = $maxScore['times']+1;
+                }
                 if (!$room_id) {
-                    Users::$error_msg = '房间不存在';
+                    Users::$error_msg = '您未在任何房间';
                     return false;
                 }
 
+
                 $my2 = RoomUsers::find()->where(['user_id'=>$val['user_id'], 'is_del'=>0, 'room_id'=>$room_id])->asArray()->one();
                 if (!$my2) {
-                    Users::$error_msg = '该用户ID不在该房间';
+                    Users::$error_msg = '您未加入该房间';
                     return false;
                 }
 
@@ -313,55 +330,90 @@ class Users  extends \yii\db\ActiveRecord
             }
 
             if ($totalScore) {
-                Users::$error_msg = '小计总分不为0';
+                Users::$error_msg = '计分总和必须零';
+                return false;
+            }
+
+            if ($isEveryZero == count($params)) {
+                Users::$error_msg = '计分不能都为零';
+                return false;
+            }
+
+            if (!$saveList) {
+                Users::$error_msg = '无提交保存数据';
                 return false;
             }
 
             try {
                 $trans = Yii::$app->getDb()->beginTransaction();
 
-
-                if ($times == 1) {
+                if ($saveList) {
                     $Rooms2 = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->one();
                     $Rooms2->status = 1;
                     $Rooms2->update_time = $date;
-                    if ($Rooms2->save()) {
-                        Users::$error_msg = '更改房间状态失败';
+                    $Rooms2->expire_time = time()+86400;
+                    if (!$Rooms2->save()) {
+                        Users::$error_msg = '更新房间状态失败';
                         return false;
                     }
-                }
-                if ($saveList) {
+
                     $aa = Yii::$app->db->createCommand()
                         ->batchInsert(Scores::tableName(), ['user_id', 'score', 'room_id', 'create_time', 'update_time', 'times'],
                             $saveList)
                         ->execute();
-                }
-                $trans->commit();
-                if ($aa) {
+                    if (!$aa) {
+                        Users::$error_msg = '保存得分数据失败';
+                        return false;
+                    }
+
+                    foreach ($saveList as $vv) {
+                        $tmp_score = 0;
+                        $tmp2 = Scores::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->asArray()->all();
+                        if ($tmp2) {
+                            foreach ($tmp2 as $v) {
+                                $tmp_score += $v['score'];
+                            }
+
+                            $RoomUsers = RoomUsers::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->one();
+                            $RoomUsers->score = $tmp_score;
+                            $RoomUsers->update_time = $date;
+                            if (!$RoomUsers->save()) {
+                                Users::$error_msg = '更新总分失败';
+                                return false;
+                            }
+                        }
+
+                    }
+                    $trans->commit();
                     return true;
                 }
+
             } catch (Exception $E) {
                 $trans->rollBack();
-                Users::$error_msg = '批量保存小计失败';
+                Users::$error_msg = '保存小计失败';
                 return false;
             }
+            Users::$error_msg = '保存小计失败';
             return false;
         }
+
+        Users::$error_msg = '请求参数非法';
+        return false;
     }
 
     static public function saveTotalScore($user_id) {
-        $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy('id', 'DESC')->asArray()->one();
+        $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
         $room_id = 0;
 
         if (!$my) {
-            Users::$error_msg = '该用户ID不存在';
+            Users::$error_msg = '未加入任何房间';
             return false;
         }
 
         $room_id = $my['room_id'];
         $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
         if (!$Rooms) {
-            Users::$error_msg = '该用户所在房间不是准备中或进行中';
+            Users::$error_msg = '房间状态已结束';
             return false;
         }
         $date = date('Y-m-d H:i:s');
@@ -372,9 +424,10 @@ class Users  extends \yii\db\ActiveRecord
             $Rooms->update_time = $date;
             $Rooms->status = 2;
             if (!$Rooms->save()) {
-                Users::$error_msg = '更改房间状态失败';
+                Users::$error_msg = '更新房间状态失败';
                 return false;
             }
+
 
             $RoomUsers = RoomUsers::find()->where(['is_del'=>0, 'room_id'=>$room_id])->asArray()->all();
             if ($RoomUsers) {
@@ -391,7 +444,7 @@ class Users  extends \yii\db\ActiveRecord
                     $my2->score = $total;
                     $my2->update_time = $date;
                     if (!$my2->save()) {
-                        Users::$error_msg = '统计总计保存失败';
+                        Users::$error_msg = '保存总分失败';
                         return false;
                     }
 
@@ -400,19 +453,21 @@ class Users  extends \yii\db\ActiveRecord
 
 
 
+
             $trans->commit();
             return true;
         } catch (Exception $E) {
             $trans->rollBack();
+            Users::$error_msg = '总计保存失败';
             return false;
         }
-
+        Users::$error_msg = '总计保存失败';
         return false;
     }
 
-    //查询进行中的数据
-    public function queryStarting($user_id) {
-        $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy('id', 'DESC')->asArray()->one();
+    //查询进行中用户头像的数据
+    public function queryStartingUsers($user_id) {
+        $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
         $room_id = 0;
         if (!$my) {
             Users::$error_msg = '该用户ID不存在';
@@ -429,7 +484,7 @@ class Users  extends \yii\db\ActiveRecord
             [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname', Users::tableName().'.avatar'])
             ->joinWith('user')
             ->where([RoomUsers::tableName(). '.room_id'=>$room_id, RoomUsers::tableName().'.is_del'=>0])
-            ->orderBy(RoomUsers::tableName().'.sorts', 'ASC')
+            ->orderBy([RoomUsers::tableName().'.sorts'=>SORT_ASC])
             ->asArray()->all();
         if (!$our) {
             Users::$error_msg = '暂无数据';
@@ -440,7 +495,7 @@ class Users  extends \yii\db\ActiveRecord
         if ($our) {
             foreach ($our as $val) {
                 if (!$val['user_id']) {
-                    $val['nickname'] = '發';
+                    $val['nickname'] = '台板';
                     $val['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
                 }
 
@@ -449,13 +504,91 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
-                    'zf_index'=>0, 'color'=> 'red', 'cur_score'
+                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>''
                 ];
             }
         }
 
         return $res;
 
+
+    }
+
+    //查询正在比赛的得分
+    public function queryStartingScore($user_id) {
+        $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+        $room_id = 0;
+        if (!$my) {
+            Users::$error_msg = '该用户ID不存在';
+            return false;
+        }
+
+        $room_id = $my['room_id'];
+        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+        if (!$Rooms) {
+            Users::$error_msg = '该用户所在房间不是准备中或进行中';
+            return false;
+        }
+
+        $tmp = [];
+        $total = [];
+        $our = RoomUsers::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['sorts'=>SORT_ASC])->asArray()->all();
+        if ($our) {
+
+            $sorts = [];
+            foreach ($our as &$val) {
+                $val['avatar'] = '';
+                if ($val['user_id']) {
+                    $tmp_user = Users::find()->where(['id' => $val['user_id']])->asArray()->one();
+                    if ($tmp_user) {
+                        $val['avatar'] = $tmp_user['avatar'];
+                        $val['nickname'] = $tmp_user['nickname'];
+                    }
+                } else {
+                    $val['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                    $val['nickname'] = '台板';
+                }
+                $sorts[$val['user_id']] = ['user_id'=>$val['user_id'], 'nickname'=>$val['nickname'], 'avatar'=>$val['avatar'], 'sorts'=>$val['sorts']];
+                $mycolor = '#E64340';
+                if ($val['score'] < 0) {
+                    $mycolor = '#09BB07';
+                }
+                $total[] = [
+                    'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor
+                ];
+            }
+            $scores = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['times'=>SORT_ASC])->asArray()->all();
+            if ($scores) {
+
+
+                foreach ($scores as $score) {
+
+                    if (isset($sorts[$score['user_id']])) {
+                        $tt = $sorts[$score['user_id']];
+                        $tt['score'] = $score['score'];
+                        $tt['times'] = $score['times'];
+                        if($tt['score'] >= 0) {
+                            $tt['color'] = '#E64340';
+                        } else {
+                            $tt['color'] = '#09BB07';
+                        }
+                        $tmp[$score['times']][] = $tt;
+                    }
+                }
+            }
+        }
+
+        if ($tmp) {
+            foreach ($tmp as &$vv) {
+                $vv = Users::arrSort($vv, 'sorts', 'asc');
+            }
+            return ['xiaoji'=>$tmp, 'total'=>$total];
+        }
+        return false;
+
+    }
+
+    static public function queryTotalScore() {
 
     }
 
@@ -472,6 +605,53 @@ class Users  extends \yii\db\ActiveRecord
     //查询所有历史数据总计
     static public function queryHistoryAll($user_id) {
 
+    }
+
+
+    //二位数组排序
+    static public function arrSort($array, $key, $order="desc"){
+        $arr_nums=$arr=array();
+        foreach($array as $k=>$v){
+            $arr_nums[$k]=$v[$key];
+        }
+        $order = strtolower($order);
+        if($order=='desc'){
+            arsort($arr_nums);
+        }else{
+            asort($arr_nums);
+        }
+        foreach($arr_nums as $k=>$v){
+            $arr[]=$array[$k];
+        }
+        return $arr;
+    }
+
+    static public function getAvatar($user_id) {
+        $cache = Yii::$app->redis->get('AVATAR#'.$user_id);
+        if ($cache) {
+            return $cache;
+        }
+        $Users = Users::find()->select(['avatar'])->where(['id'=>$user_id])->asArray()->one();
+        if ($Users) {
+            Yii::$app->redis->set('AVATAR#'.$user_id, $Users['avatar']);
+            Yii::$app->redis->expire('AVATAR#'.$user_id, 86400);
+            return $Users['avatar'];
+        }
+        return '';
+    }
+
+    static public function getNickname($user_id) {
+        $cache = Yii::$app->redis->get('NICKNAME#'.$user_id);
+        if ($cache) {
+            return $cache;
+        }
+        $Users = Users::find()->select(['nickname'])->where(['id'=>$user_id])->asArray()->one();
+        if ($Users) {
+            Yii::$app->redis->set('NICKNAME#'.$user_id, $Users['nickname']);
+            Yii::$app->redis->expire('NICKNAME#'.$user_id, 86400);
+            return $Users['nickname'];
+        }
+        return '';
     }
 
 

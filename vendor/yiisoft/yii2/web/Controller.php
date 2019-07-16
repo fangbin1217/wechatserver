@@ -34,7 +34,7 @@ class Controller extends \yii\base\Controller
 
     public $jsonResponse = [
         'code' => -1,
-        'msg' => '',
+        'msg' => 'error',
         'data' => []
     ];
 

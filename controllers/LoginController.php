@@ -2,13 +2,14 @@
 
 namespace app\controllers;
 
+use app\models\Scores;
 use app\models\Users;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-
+use app\models\Rooms;
 class LoginController extends Controller
 {
 
@@ -66,6 +67,7 @@ class LoginController extends Controller
         $session_key = $params['session_key'] ?? '';
         $nickname = $params['nickname'] ?? '';
         $avatar = $params['avatar'] ?? '';
+        $bind_uid = $params['bind_uid'] ?? '';
         $this->jsonResponse['msg'] = 'do login error';
 
         if (!$openid) {
@@ -115,6 +117,9 @@ class LoginController extends Controller
                         $users2->save();
                     }
                 }
+                if ($bind_uid) {
+                    $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
+                }
             }
 
         } else {
@@ -144,6 +149,10 @@ class LoginController extends Controller
                 $cacheList = Users::getUserInfo($usersInfo['id']);
                 Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                 Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
+
+                if ($bind_uid) {
+                    $isSave = Users::bindedRoom($usersInfo['id'], $bind_uid, $nickname);
+                }
             }
         }
 
@@ -156,8 +165,14 @@ class LoginController extends Controller
             ['user_id'=>3, 'score'=>'-30'],['user_id'=>4, 'score'=>-70],['user_id'=>0, 'score'=>10],
 
         ];
-        $isSave = (new Users())->queryStarting(1);
-        print_r($isSave);
+        //$isSave = (new Scores())->getLastYearScore(2);
+        $Rooms2 = Rooms::find()->where(['id'=>4, 'is_del'=>0])->one();
+        $Rooms2->status = 1;
+        $Rooms2->update_time = date('Y-m-d H:i:s');
+        if ($Rooms2->save()) {
+            $this->jsonResponse['msg'] = Users::$error_msg = '更新房间状态失败';
+        }
+        print_r($this->jsonResponse);
         exit;
     }
 
