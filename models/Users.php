@@ -260,10 +260,10 @@ class Users  extends \yii\db\ActiveRecord
 
     }
 
-    static public function saveScore($params) {
-        //, Yii::$app->params['serverHost'].'images/fa.png'
-        if (is_array($params)) {
+    //保存得分 默认是小计 参数二 true为总计
+    static public function saveScore($params, $isTotalScore = false) {
 
+        if (is_array($params)) {
             $saveList = [];
             $i = 0;
             $room_id = 0;
@@ -280,13 +280,11 @@ class Users  extends \yii\db\ActiveRecord
                     return false;
                 }
 
+                $val['user_id'] = (int) $val['user_id'];
+                $val['score'] = (int) $val['score'];
                 if (!$val['score']) {
                     $isEveryZero += 1;
                 }
-
-
-                $val['user_id'] = (int) $val['user_id'];
-                $val['score'] = (int) $val['score'];
                 if ($val['zf_index'] == 1) {
                     $val['score'] = -$val['score'];
                 }
@@ -334,10 +332,14 @@ class Users  extends \yii\db\ActiveRecord
                 return false;
             }
 
-            if ($isEveryZero == count($params)) {
-                Users::$error_msg = '计分不能都为零';
-                return false;
+            //小计需要验证不能都为0
+            if (!$isTotalScore) {
+                if ($isEveryZero == count($params)) {
+                    Users::$error_msg = '计分不能都为零';
+                    return false;
+                }
             }
+
 
             if (!$saveList) {
                 Users::$error_msg = '无提交保存数据';
@@ -349,7 +351,11 @@ class Users  extends \yii\db\ActiveRecord
 
                 if ($saveList) {
                     $Rooms2 = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->one();
-                    $Rooms2->status = 1;
+                    if ($isTotalScore) {  //如果是总计  改为已结束
+                        $Rooms2->status = 2;
+                    } else {
+                        $Rooms2->status = 1;
+                    }
                     $Rooms2->update_time = $date;
                     $Rooms2->expire_time = time()+86400;
                     if (!$Rooms2->save()) {
@@ -357,32 +363,32 @@ class Users  extends \yii\db\ActiveRecord
                         return false;
                     }
 
-                    $aa = Yii::$app->db->createCommand()
-                        ->batchInsert(Scores::tableName(), ['user_id', 'score', 'room_id', 'create_time', 'update_time', 'times'],
-                            $saveList)
-                        ->execute();
-                    if (!$aa) {
-                        Users::$error_msg = '保存得分数据失败';
-                        return false;
-                    }
-
-                    foreach ($saveList as $vv) {
-                        $tmp_score = 0;
-                        $tmp2 = Scores::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->asArray()->all();
-                        if ($tmp2) {
-                            foreach ($tmp2 as $v) {
-                                $tmp_score += $v['score'];
-                            }
-
-                            $RoomUsers = RoomUsers::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->one();
-                            $RoomUsers->score = $tmp_score;
-                            $RoomUsers->update_time = $date;
-                            if (!$RoomUsers->save()) {
-                                Users::$error_msg = '更新总分失败';
-                                return false;
-                            }
+                    if (!($isEveryZero == count($params))) {
+                        $aa = Yii::$app->db->createCommand()
+                            ->batchInsert(Scores::tableName(), ['user_id', 'score', 'room_id', 'create_time', 'update_time', 'times'],
+                                $saveList)
+                            ->execute();
+                        if (!$aa) {
+                            Users::$error_msg = '保存得分数据失败';
+                            return false;
                         }
 
+                        foreach ($saveList as $vv) {
+                            $tmp_score = 0;
+                            $tmp2 = Scores::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->asArray()->all();
+                            if ($tmp2) {
+                                foreach ($tmp2 as $v) {
+                                    $tmp_score += $v['score'];
+                                }
+                                $RoomUsers = RoomUsers::find()->where(['user_id'=>$vv['user_id'], 'room_id'=>$room_id, 'is_del'=>0])->one();
+                                $RoomUsers->score = $tmp_score;
+                                $RoomUsers->update_time = $date;
+                                if (!$RoomUsers->save()) {
+                                    Users::$error_msg = '更新总分失败';
+                                    return false;
+                                }
+                            }
+                        }
                     }
                     $trans->commit();
                     return true;
@@ -589,11 +595,6 @@ class Users  extends \yii\db\ActiveRecord
     }
 
     static public function queryTotalScore() {
-
-    }
-
-    //查询已完成最近一个
-    static public function queryLatelyDetail($user_id) {
 
     }
 

@@ -117,6 +117,8 @@ class LoginController extends Controller
                         $users2->save();
                     }
                 }
+
+                //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
                 }
@@ -150,6 +152,7 @@ class LoginController extends Controller
                 Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                 Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
 
+                //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($usersInfo['id'], $bind_uid, $nickname);
                 }
@@ -166,13 +169,8 @@ class LoginController extends Controller
 
         ];
         //$isSave = (new Scores())->getLastYearScore(2);
-        $Rooms2 = Rooms::find()->where(['id'=>4, 'is_del'=>0])->one();
-        $Rooms2->status = 1;
-        $Rooms2->update_time = date('Y-m-d H:i:s');
-        if ($Rooms2->save()) {
-            $this->jsonResponse['msg'] = Users::$error_msg = '更新房间状态失败';
-        }
-        print_r($this->jsonResponse);
+        $a = (new Scores())->getLastRecord(2);
+        print_r($a);
         exit;
     }
 

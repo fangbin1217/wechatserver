@@ -22,7 +22,7 @@ class Scores  extends \yii\db\ActiveRecord
         $result = [];
         $room_id = 0;
         //最近2次记录
-        $RoomUsers = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->limit(2)->asArray()->all();
+        $RoomUsers = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->all();
         foreach ($RoomUsers as $val) {
             //查看最近的一条是否为已结束
             $Rooms = Rooms::find()->where(['id'=>$val['room_id'], 'is_del'=>0])->asArray()->one();
@@ -33,6 +33,7 @@ class Scores  extends \yii\db\ActiveRecord
                 }
             }
         }
+
 
         if ($room_id) {
             $tmp = [];
