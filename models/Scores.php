@@ -117,8 +117,19 @@ class Scores  extends \yii\db\ActiveRecord
     public function getLastYearScore($user_id) {
         $res = [];
         $result = [];
+
+        $room_ids = [];
+        $Rooms = Rooms::find()->where(['in', 'status', [0,1]])->andWhere(['is_del'=>0])->asArray()->all();
+        if ($Rooms) {
+            $room_ids = array_column($Rooms, 'id');
+        }
+
         $time = date('Y-m-d H:i:s', strtotime('-1 years'));
-        $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id'=>$user_id, 'is_del'=>0])->andWhere(['>', 'create_time', $time])->orderBy(['id'=>SORT_DESC])->asArray()->all();
+        if (!$room_ids) {
+            $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->orderBy(['id' => SORT_DESC])->asArray()->all();
+        } else {
+            $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->andWhere(['not in', 'room_id', $room_ids])->orderBy(['id' => SORT_DESC])->asArray()->all();
+        }
         if ($RoomUsers) {
             $room_ids = array_column($RoomUsers, 'room_id');
             $others = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->andWhere(['<>', 'user_id', 0])->asArray()->all();
