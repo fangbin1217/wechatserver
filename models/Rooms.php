@@ -18,7 +18,6 @@ class Rooms  extends \yii\db\ActiveRecord
         $date = date('Y-m-d H:i:s');
         $Rooms = Rooms::find()->select(['id'])->where(['is_del'=>0])->andWhere(['in', 'status', [0,1]])->andWhere(['<', 'expire_time', $time])->asArray()->all();
         if ($Rooms) {
-
                 try {
                     $trans = Yii::$app->getDb()->beginTransaction();
                     foreach ($Rooms as $val) {
@@ -38,7 +37,7 @@ class Rooms  extends \yii\db\ActiveRecord
 
 
         }
-        return false;
+        return true;
     }
 
     static public function isRoomOwner($user_id) {

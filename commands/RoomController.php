@@ -34,7 +34,11 @@ class RoomController extends Controller
 
         $Rooms = new Rooms();
         $run = $Rooms->setExpireRoom();
-        print_r($run);
+        if ($run) {
+            echo "success\n";
+        } else {
+            echo "fail\n";
+        }
         return ExitCode::OK;
     }
 }
