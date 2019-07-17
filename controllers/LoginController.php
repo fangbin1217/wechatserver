@@ -169,7 +169,7 @@ class LoginController extends Controller
 
         ];
         //$isSave = (new Scores())->getLastYearScore(2);
-        $a = (new Scores())->getLastRecord(2);
+        $a  = (new Scores())->getLastYearScore(2);
         print_r($a);
         exit;
     }

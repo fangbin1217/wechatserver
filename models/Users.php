@@ -338,6 +338,26 @@ class Users  extends \yii\db\ActiveRecord
                     Users::$error_msg = '计分不能都为零';
                     return false;
                 }
+            } else { //如果是总计
+                //如果未提交数据
+                if ($isEveryZero == count($params)) {
+                    //查看历史数据
+                    $mytmp = RoomUsers::find()->where(['is_del'=>0, 'room_id'=>$room_id])->asArray()->all();
+                    $tmpscore = true;
+
+                    if ($mytmp) {
+                        foreach ($mytmp as $aa) {
+                            if ($aa['score']) {
+                                $tmpscore = false;
+                            }
+                        }
+                    }
+                    if ($tmpscore) {
+                        Users::$error_msg = '未提交任何数据';
+                        return false;
+                    }
+
+                }
             }
 
 

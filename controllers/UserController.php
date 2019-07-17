@@ -8,6 +8,8 @@ use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\Users;
+use app\models\Rooms;
+
 
 class UserController extends Controller
 {
@@ -56,6 +58,7 @@ class UserController extends Controller
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get startusers success';
                     $this->jsonResponse['data'] = $queryStarting;
+                    $this->jsonResponse['isRoomOwner'] = Rooms::isRoomOwner($cacheList['id']);
                     $this->jsonResponse['xiaoji'] = [];
                     $this->jsonResponse['total'] = [];
                     $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);

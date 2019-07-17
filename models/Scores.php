@@ -42,18 +42,8 @@ class Scores  extends \yii\db\ActiveRecord
             $our = RoomUsers::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['sorts'=>SORT_ASC])->asArray()->all();
             $sorts = [];
             foreach ($our as &$val) {
-                $val['avatar'] = '';
-                if ($val['user_id']) {
-                    $tmp_user = Users::find()->where(['id' => $val['user_id']])->asArray()->one();
-                    if ($tmp_user) {
-                        $val['avatar'] = $tmp_user['avatar'];
-                        $val['nickname'] = $tmp_user['nickname'];
-                    }
-                } else {
-                    $val['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
-                    $val['nickname'] = '台板';
-                }
-                $sorts[$val['user_id']] = ['user_id'=>$val['user_id'], 'nickname'=>$val['nickname'], 'avatar'=>$val['avatar'], 'sorts'=>$val['sorts']];
+
+                $sorts[$val['user_id']] = ['user_id'=>$val['user_id'], 'sorts'=>$val['sorts']];
                 $mycolor = '#E64340';
                 if ($val['score'] < 0) {
                     $mycolor = '#09BB07';
@@ -97,11 +87,22 @@ class Scores  extends \yii\db\ActiveRecord
                         $to['first_or_second'] = '';
                         if (isset($uid_times[$to['user_id']])) {
                             if ($uid_times[$to['user_id']] == 1) {
-                                $to['first_or_second'] = '../../images/guanjun.png';
+                                $to['first_or_second'] = '../../images/NO.png';
                             } elseif ($uid_times[$to['user_id']] == 2) {
-                                $to['first_or_second'] = '../../images/yajun.png';
+                                $to['first_or_second'] = '../../images/NO2.png';
                             }
                         }
+
+                        $to['avatar'] = '';
+                        $to['nickname'] = '';
+                        if ($to['user_id']) {
+                            $to['avatar'] = Users::getAvatar($to['user_id']);
+                            $to['nickname'] = Users::getNickname($to['user_id']);
+                        } else {
+                            $to['nickname'] = '台板';
+                            $to['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                        }
+
                     }
                 }
             }
@@ -114,16 +115,16 @@ class Scores  extends \yii\db\ActiveRecord
 
     //获取历史统计记录汇总(近1年的)
     public function getLastYearScore($user_id) {
+        $res = [];
         $result = [];
-        $room_id = 0;
         $time = date('Y-m-d H:i:s', strtotime('-1 years'));
         $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id'=>$user_id, 'is_del'=>0])->andWhere(['>', 'create_time', $time])->orderBy(['id'=>SORT_DESC])->asArray()->all();
         if ($RoomUsers) {
             $room_ids = array_column($RoomUsers, 'room_id');
-            $others = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->asArray()->all();
+            $others = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->andWhere(['<>', 'user_id', 0])->asArray()->all();
+            $tais = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->andWhere(['user_id'=> 0])->asArray()->all();
 
-            if ($others) {
-                $tmp = [];
+            if ($others && $tais) {
                 foreach ($RoomUsers as $val) {
                     $val['avatar'] = Users::getAvatar($val['user_id']);
                     $val['create_time'] = date('m月d日', strtotime($val['create_time']));
@@ -131,38 +132,94 @@ class Scores  extends \yii\db\ActiveRecord
                     if ($val['score'] < 0) {
                         $val['color'] = '#09BB07';
                     }
-                    $tmp[$room_id][] = $val;
+                    $result[$val['room_id']][] = $val;
                     foreach ($others as $other) {
                         if ($other['room_id'] == $val['room_id']) {
-                            $other['avatar'] = Users::getAvatar($other['user_id']);
+                            if ($other['user_id']) {
+                                $other['avatar'] = Users::getAvatar($other['user_id']);
+                            } else {
+                                $other['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                            }
                             $other['create_time'] = date('m月d日', strtotime($other['create_time']));
                             $other['color'] = '#E64340';
                             if ($other['score'] < 0) {
                                 $other['color'] = '#09BB07';
                             }
-                            $tmp[$room_id][] = $other;
+                            $result[$val['room_id']][] = $other;
                         }
+                    }
+
+                    foreach ($tais as $tai) {
+                        if ($tai['room_id'] == $val['room_id']) {
+                            if ($tai['user_id']) {
+                                $tai['avatar'] = Users::getAvatar($tai['user_id']);
+                            } else {
+                                $tai['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                            }
+                            $tai['create_time'] = date('m月d日', strtotime($tai['create_time']));
+                            $tai['color'] = '#E64340';
+                            if ($tai['score'] < 0) {
+                                $tai['color'] = '#09BB07';
+                            }
+                            $result[$val['room_id']][] = $tai;
+                        }
+                    }
+                }
+
+                if ($result) {
+                    foreach ($result as $V) {
+                        $res[] = $V;
                     }
                 }
             }
         }
-        return $result;
+        return $res;
     }
 
     public function myResults($user_id) {
-        $result = [
-            'totalScore' => 0, 'maxScore'=>0, 'minScore'=>0, 'times'=>0
-        ];
-        $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id'=>$user_id, 'is_del'=>0])->asArray()->all();
+        $result = [];
+        $RoomUsers = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->asArray()->all();
         if ($RoomUsers) {
-            $result['times'] = count($RoomUsers);
+
+            $result = [
+                'totalScore' => 0, 'totalScoreColor'=> '#E64340',
+                'cjScore' => 0, 'cjScoreColor'=> '#E64340',
+                'maxScore'=>0, 'maxScoreColor' => '#E64340',
+                'minScore'=>0, 'minScoreColor' => '#E64340',
+                'jsScore'=>0, 'jsScoreColor' => '#353535',
+                'timesScore'=>0, 'timesScoreColor' => '#353535'
+            ];
+
+            $totalTime = 0;
+
+            $result['timesScore'] = count($RoomUsers);
             foreach ($RoomUsers as $val) {
                 $result['totalScore'] += $val['score'];
+
+                $totalTime += strtotime($val['update_time']) - strtotime($val['create_time']);
             }
+            if ($result['totalScore'] < 0) {
+                $result['totalScoreColor'] = '#09BB07';
+            }
+
+            $result['cjScore'] = round($result['totalScore']/$result['timesScore']);
+            if ($result['cjScore'] < 0) {
+                $result['cjScoreColor'] = '#09BB07';
+            }
+
+
+            $result['jsScore'] =  round(($totalTime/$result['timesScore'])/3600).'H';
+
 
             $RoomUsers2 = Users::arrSort($RoomUsers, 'score', 'desc');
             $result['maxScore'] = $RoomUsers2[0]['score'] ?? 0;
-            $result['minScore'] = $RoomUsers2[$result['times'] - 1]['score'] ?? 0;
+            if ($result['maxScore'] < 0) {
+                $result['maxScoreColor'] = '#09BB07';
+            }
+            $result['minScore'] = $RoomUsers2[$result['timesScore'] - 1]['score'] ?? 0;
+            if ($result['minScore'] < 0) {
+                $result['minScoreColor'] = '#09BB07';
+            }
 
         }
 

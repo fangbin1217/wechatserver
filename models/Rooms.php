@@ -40,4 +40,14 @@ class Rooms  extends \yii\db\ActiveRecord
         }
         return false;
     }
+
+    static public function isRoomOwner($user_id) {
+        $time = time();
+        $date = date('Y-m-d H:i:s');
+        $Rooms = Rooms::find()->where(['is_del'=>0, 'user_id'=>$user_id])->andWhere(['in', 'status', [0,1]])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+        if ($Rooms) {
+            return true;
+        }
+        return false;
+    }
 }
