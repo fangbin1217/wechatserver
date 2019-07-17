@@ -37,3 +37,4 @@ composer.json
 composer.lock
 public/index.php
 /runtime
+yii
