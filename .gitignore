@@ -36,5 +36,3 @@ tests/_support/_generated
 composer.json
 composer.lock
 public/index.php
-web/images/*
-config/db.php
