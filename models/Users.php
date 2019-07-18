@@ -111,7 +111,8 @@ class Users  extends \yii\db\ActiveRecord
         if (!$xcx) {
             return '';
         }
-        $data_list = ['scene'=>'1025&'.$uid, 'page'=>'pages/index/index', 'width'=> '280'];
+        $time = time();
+        $data_list = ['scene'=> $time.'&'.$uid, 'page'=>'pages/index/index', 'width'=> '280'];
         $data_string = json_encode($data_list);
         $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=$xcx";
         $ch = curl_init();
