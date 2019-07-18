@@ -81,12 +81,12 @@ class Users  extends \yii\db\ActiveRecord
         return '';
     }
 
-    static public function saveQrcode($scene = 0) {
+    static public function saveQrcode($uid = 0) {
         $xcx = Users::createXCX();
         if (!$xcx) {
             return '';
         }
-        $data_list = ['scene'=>$scene, 'page'=>'pages/index/index', 'width'=> '280'];
+        $data_list = ['scene'=>'1025&'.$uid, 'page'=>'pages/index/index', 'width'=> '280'];
         $data_string = json_encode($data_list);
         $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=$xcx";
         $ch = curl_init();

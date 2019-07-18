@@ -49,11 +49,11 @@ class Scores  extends \yii\db\ActiveRecord
                     $mycolor = '#09BB07';
                 }
                 $total[] = [
-                    'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor
+                    'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor, 'date' => date('Y年m月d日', strtotime($val['create_time']))
                 ];
                 if ($val['user_id'] > 0) {
                     $total2[] = [
-                        'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor
+                        'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor, 'date' => date('Y年m月d日', strtotime($val['create_time']))
                     ];
                 }
             }
