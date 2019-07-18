@@ -109,6 +109,7 @@ class LoginController extends Controller
                 Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                 Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
 
+                /*
                 $saveQrcode = Users::saveQrcode($users->id);
                 if ($saveQrcode) {
                     $users2 = Users::find()->where(['id'=>$users->id])->one();
@@ -117,6 +118,7 @@ class LoginController extends Controller
                         $users2->save();
                     }
                 }
+                */
 
                 //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
@@ -135,12 +137,15 @@ class LoginController extends Controller
             $users->login_ip = Yii::$app->request->getUserIP();
             $users->login_time = $date;
 
+            /*
             if (!$usersInfo['qrcode']) {
                 $saveQrcode = Users::saveQrcode($usersInfo['id']);
                 if ($saveQrcode) {
                     $users->qrcode = $saveQrcode;
                 }
             }
+            */
+
             if ($users->save()) {
                 $this->jsonResponse['code'] = 0;
                 $this->jsonResponse['msg'] = 'login upd success';

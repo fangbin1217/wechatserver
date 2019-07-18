@@ -82,7 +82,9 @@ class UserController extends Controller
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
-                $qrcode = $cacheList['qrcode'];
+
+                $qrcode = Users::getMyQrcode($cacheList['id']);
+                //$qrcode = $cacheList['qrcode'];
                 if ($qrcode) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get qrcode success';

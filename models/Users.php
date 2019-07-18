@@ -81,6 +81,31 @@ class Users  extends \yii\db\ActiveRecord
         return '';
     }
 
+    static public function getMyQrcode($uid = 0) {
+        if (!$uid) {
+            return '';
+        }
+        $cache = Yii::$app->redis->get('QR#'.$uid);
+        if ($cache) {
+            return $cache;
+        }
+
+        $saveQrcode = Users::saveQrcode($uid);
+        if ($saveQrcode) {
+            Yii::$app->redis->set('QR#'.$uid, $saveQrcode);
+            Yii::$app->redis->expire('QR#'.$uid, 7200);
+
+            $users = Users::find()->where(['id'=>$uid])->one();
+            if ($users) {
+                $users->qrcode = $saveQrcode;
+                $users->update_time = date('Y-m-d H:i:s');
+                $users->save();
+            }
+            return $saveQrcode;
+        }
+        return '';
+    }
+
     static public function saveQrcode($uid = 0) {
         $xcx = Users::createXCX();
         if (!$xcx) {
