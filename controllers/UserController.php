@@ -58,6 +58,7 @@ class UserController extends Controller
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get startusers success';
                     $this->jsonResponse['data'] = $queryStarting;
+                    $this->jsonResponse['userCount'] = count($queryStarting);
                     $this->jsonResponse['isRoomOwner'] = Rooms::isRoomOwner($cacheList['id']);
                     $this->jsonResponse['xiaoji'] = [];
                     $this->jsonResponse['total'] = [];
@@ -107,16 +108,19 @@ class UserController extends Controller
 
             $this->jsonResponse['xiaoji'] = [];
             $this->jsonResponse['total'] = [];
+            $this->jsonResponse['userCount'] = 0;
             $access_token = $params['access_token'] ?? '';
             if ($access_token) {
                 $cache = Yii::$app->redis->get('T#' . $access_token);
                 if ($cache) {
                     $cacheList = json_decode($cache, true);
-                    $this->jsonResponse['data'] = (new Users())->queryStartingUsers($cacheList['id']);
+                    $queryStarting = (new Users())->queryStartingUsers($cacheList['id']);
+                    $this->jsonResponse['data'] = $queryStarting;
                     $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);
                     if ($queryStartingScore) {
                         $this->jsonResponse['xiaoji'] = $queryStartingScore['xiaoji'];
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
+                        $this->jsonResponse['userCount'] = count($queryStarting);
                     }
                 }
             }
@@ -146,16 +150,19 @@ class UserController extends Controller
 
             $this->jsonResponse['xiaoji'] = [];
             $this->jsonResponse['total'] = [];
+            $this->jsonResponse['userCount'] = 0;
             $access_token = $params['access_token'] ?? '';
             if ($access_token) {
                 $cache = Yii::$app->redis->get('T#' . $access_token);
                 if ($cache) {
                     $cacheList = json_decode($cache, true);
-                    $this->jsonResponse['data'] = (new Users())->queryStartingUsers($cacheList['id']);
+                    $queryStarting = (new Users())->queryStartingUsers($cacheList['id']);
+                    $this->jsonResponse['data'] = $queryStarting;
                     $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);
                     if ($queryStartingScore) {
                         $this->jsonResponse['xiaoji'] = $queryStartingScore['xiaoji'];
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
+                        $this->jsonResponse['userCount'] = count($queryStarting);
                     }
                 }
             }

@@ -556,7 +556,7 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
-                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>''
+                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>'', 'is_ready'=>0
                 ];
             }
         }
