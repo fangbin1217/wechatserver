@@ -93,7 +93,7 @@ class Users  extends \yii\db\ActiveRecord
         $saveQrcode = Users::saveQrcode($uid);
         if ($saveQrcode) {
             Yii::$app->redis->set('QR#'.$uid, $saveQrcode);
-            Yii::$app->redis->expire('QR#'.$uid, 7200);
+            Yii::$app->redis->expire('QR#'.$uid, 86400);
 
             $users = Users::find()->where(['id'=>$uid])->one();
             if ($users) {

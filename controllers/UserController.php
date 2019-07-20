@@ -128,17 +128,11 @@ class UserController extends Controller
             $this->jsonResponse['msg'] = Users::$error_msg;
         }
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+
     }
 
     //保存得分(总计)
     public function actionSavetotalscore() {
-
-        /*
-        sleep(2);
-        $this->jsonResponse['code'] = -1;
-        $this->jsonResponse['msg'] = 'error';
-        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-        */
 
         $params = json_decode(file_get_contents('php://input'),true);
 
