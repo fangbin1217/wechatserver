@@ -87,9 +87,9 @@ class Scores  extends \yii\db\ActiveRecord
                         $to['first_or_second'] = '';
                         if (isset($uid_times[$to['user_id']])) {
                             if ($uid_times[$to['user_id']] == 1) {
-                                $to['first_or_second'] = '../../images/NO.png';
+                                $to['first_or_second'] = Yii::$app->params['image_no1'];
                             } elseif ($uid_times[$to['user_id']] == 2) {
-                                $to['first_or_second'] = '../../images/NO2.png';
+                                $to['first_or_second'] = Yii::$app->params['image_no2'];
                             }
                         }
 
@@ -99,8 +99,8 @@ class Scores  extends \yii\db\ActiveRecord
                             $to['avatar'] = Users::getAvatar($to['user_id']);
                             $to['nickname'] = Users::getNickname($to['user_id']);
                         } else {
-                            $to['nickname'] = '台板';
-                            $to['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                            $to['nickname'] = Yii::$app->params['name_fa'];
+                            $to['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                         }
 
                     }
@@ -149,7 +149,7 @@ class Scores  extends \yii\db\ActiveRecord
                             if ($other['user_id']) {
                                 $other['avatar'] = Users::getAvatar($other['user_id']);
                             } else {
-                                $other['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                                $other['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
                             $other['create_time'] = date('m月d日', strtotime($other['create_time']));
                             $other['color'] = '#E64340';
@@ -165,7 +165,7 @@ class Scores  extends \yii\db\ActiveRecord
                             if ($tai['user_id']) {
                                 $tai['avatar'] = Users::getAvatar($tai['user_id']);
                             } else {
-                                $tai['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                                $tai['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
                             $tai['create_time'] = date('m月d日', strtotime($tai['create_time']));
                             $tai['color'] = '#E64340';

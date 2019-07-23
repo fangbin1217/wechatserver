@@ -74,7 +74,7 @@ class Users  extends \yii\db\ActiveRecord
             $xcx = $output['access_token'] ?? '';
             if ($xcx) {
                 Yii::$app->redis->set('XCX', $xcx);
-                Yii::$app->redis->expire('XCX', 7200);
+                Yii::$app->redis->expire('XCX', Yii::$app->params['XCX_ACCESS_TOKEN']);
             }
             return $xcx;
         }
@@ -93,7 +93,7 @@ class Users  extends \yii\db\ActiveRecord
         $saveQrcode = Users::saveQrcode($uid);
         if ($saveQrcode) {
             Yii::$app->redis->set('QR#'.$uid, $saveQrcode);
-            Yii::$app->redis->expire('QR#'.$uid, 86400);
+            Yii::$app->redis->expire('QR#'.$uid, Yii::$app->params['qrcodeImageTime']);
 
             $users = Users::find()->where(['id'=>$uid])->one();
             if ($users) {
@@ -187,7 +187,7 @@ class Users  extends \yii\db\ActiveRecord
         //查找最新房间数据
         $room = Rooms::find()->where(['user_id'=>$binded_user_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
         $date = date('Y-m-d H:i:s');
-        $time = time() + 86400;
+        $time = time() + Yii::$app->params['roomCacheTime'];
         if (!$room) {
             try {
                 $trans = Yii::$app->getDb()->beginTransaction();
@@ -206,7 +206,7 @@ class Users  extends \yii\db\ActiveRecord
                 $values = [
                     [$userInfo['id'], $room_id, $userInfo['nickname'], $date, $date, 1],
                     [$cur_user_id, $room_id, $nickname, $date, $date, 2],
-                    [0, $room_id, '台', $date, $date, 5],
+                    [0, $room_id, Yii::$app->params['name_fa'], $date, $date, 5],
                 ];
 
                 $aa = Yii::$app->db->createCommand()
@@ -235,7 +235,7 @@ class Users  extends \yii\db\ActiveRecord
                     }
 
                     $RoomUsersCount = RoomUsers::find()->where(['room_id'=> $room_id, 'is_del'=>0])->count();
-                    if ($RoomUsersCount >= 5) {
+                    if ($RoomUsersCount >= Yii::$app->params['MAX_PERSON_NUM']) {
                         Users::$error_msg = '限定人数上限4人';
                         return false;
                     }
@@ -403,7 +403,7 @@ class Users  extends \yii\db\ActiveRecord
                         $Rooms2->status = 1;
                     }
                     $Rooms2->update_time = $date;
-                    $Rooms2->expire_time = time()+86400;
+                    $Rooms2->expire_time = time() + Yii::$app->params['roomCacheTime'];
                     if (!$Rooms2->save()) {
                         Users::$error_msg = '更新房间状态失败';
                         return false;
@@ -547,8 +547,8 @@ class Users  extends \yii\db\ActiveRecord
         if ($our) {
             foreach ($our as $val) {
                 if (!$val['user_id']) {
-                    $val['nickname'] = '台板';
-                    $val['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
+                    $val['nickname'] = Yii::$app->params['name_fa'];
+                    $val['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                 }
 
                 if (mb_strlen($val['nickname'], 'utf-8') > 8) {
@@ -556,7 +556,7 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
-                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> '../../images/jiahao.png'
+                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
                 ];
             }
         }
@@ -597,8 +597,8 @@ class Users  extends \yii\db\ActiveRecord
                         $val['nickname'] = $tmp_user['nickname'];
                     }
                 } else {
-                    $val['avatar'] = Yii::$app->params['serverHost'].'images/fa.png';
-                    $val['nickname'] = '台板';
+                    $val['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
+                    $val['nickname'] = Yii::$app->params['name_fa'];
                 }
                 $sorts[$val['user_id']] = ['user_id'=>$val['user_id'], 'nickname'=>$val['nickname'], 'avatar'=>$val['avatar'], 'sorts'=>$val['sorts']];
                 $mycolor = '#E64340';
@@ -681,7 +681,7 @@ class Users  extends \yii\db\ActiveRecord
         $Users = Users::find()->select(['avatar'])->where(['id'=>$user_id])->asArray()->one();
         if ($Users) {
             Yii::$app->redis->set('AVATAR#'.$user_id, $Users['avatar']);
-            Yii::$app->redis->expire('AVATAR#'.$user_id, 86400);
+            Yii::$app->redis->expire('AVATAR#'.$user_id, Yii::$app->params['history_avatar']);
             return $Users['avatar'];
         }
         return '';
@@ -695,7 +695,7 @@ class Users  extends \yii\db\ActiveRecord
         $Users = Users::find()->select(['nickname'])->where(['id'=>$user_id])->asArray()->one();
         if ($Users) {
             Yii::$app->redis->set('NICKNAME#'.$user_id, $Users['nickname']);
-            Yii::$app->redis->expire('NICKNAME#'.$user_id, 86400);
+            Yii::$app->redis->expire('NICKNAME#'.$user_id, Yii::$app->params['history_nickname']);
             return $Users['nickname'];
         }
         return '';
