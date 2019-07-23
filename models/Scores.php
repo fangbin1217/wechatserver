@@ -27,7 +27,7 @@ class Scores  extends \yii\db\ActiveRecord
             //查看最近的一条是否为已结束
             $Rooms = Rooms::find()->where(['id'=>$val['room_id'], 'is_del'=>0])->asArray()->one();
             if ($Rooms) {
-                if ($Rooms['status'] == 2) {
+                if ($Rooms['status'] == Rooms::STATUS_IS_END) {
                     $room_id = $val['room_id'];
                     break;
                 }
@@ -95,17 +95,18 @@ class Scores  extends \yii\db\ActiveRecord
 
                         $to['avatar'] = '';
                         $to['nickname'] = '';
+                        $to['local_avatar'] = Yii::$app->params['image_default'];
                         if ($to['user_id']) {
+                            $to['avatar'] = Users::getAvatar($to['user_id']);
+
                             $avatar = Users::getLocalAvatar($to['user_id']);
                             if ($avatar) {
-                                $to['avatar'] = Yii::$app->params['serverHost'].$avatar;
-                            } else {
-                                $to['avatar'] = Users::getAvatar($to['user_id']);
+                                $to['local_avatar'] = Yii::$app->params['serverHost'].$avatar;
                             }
                             $to['nickname'] = Users::getNickname($to['user_id']);
                         } else {
                             $to['nickname'] = Yii::$app->params['name_fa'];
-                            $to['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
+                            $to['avatar'] = Yii::$app->params['image_fa'];
                         }
 
                     }
@@ -138,16 +139,15 @@ class Scores  extends \yii\db\ActiveRecord
         if ($RoomUsers) {
             $room_ids = array_column($RoomUsers, 'room_id');
             $others = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->andWhere(['<>', 'user_id', 0])->asArray()->all();
-            $tais = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['<>', 'user_id', $user_id])->andWhere(['user_id'=> 0])->asArray()->all();
+            $tais = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['is_del'=>0])->where(['in', 'room_id', $room_ids])->andWhere(['user_id'=> 0])->asArray()->all();
 
             if ($others && $tais) {
                 foreach ($RoomUsers as $val) {
-
+                    $val['avatar'] = Users::getAvatar($val['user_id']);
+                    $val['local_avatar'] = Yii::$app->params['image_default'];
                     $avatar = Users::getLocalAvatar($val['user_id']);
                     if ($avatar) {
-                        $val['avatar'] = Yii::$app->params['serverHost'].$avatar;
-                    } else {
-                        $val['avatar'] = Users::getAvatar($val['user_id']);
+                        $val['local_avatar'] = Yii::$app->params['serverHost'] . $avatar;
                     }
 
                     $val['create_time'] = date('m月d日', strtotime($val['create_time']));
@@ -158,15 +158,12 @@ class Scores  extends \yii\db\ActiveRecord
                     $result[$val['room_id']][] = $val;
                     foreach ($others as $other) {
                         if ($other['room_id'] == $val['room_id']) {
-                            if ($other['user_id']) {
-                                $avatar2 = Users::getLocalAvatar($other['user_id']);
-                                if ($avatar2) {
-                                    $other['avatar'] = Yii::$app->params['serverHost'].$avatar2;
-                                } else {
-                                    $other['avatar'] = Users::getAvatar($other['user_id']);
-                                }
-                            } else {
-                                $other['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
+                            $other['avatar'] = Users::getAvatar($other['user_id']);
+
+                            $other['local_avatar'] = Yii::$app->params['image_default'];
+                            $avatar2 = Users::getLocalAvatar($other['user_id']);
+                            if ($avatar2) {
+                                $other['local_avatar'] = Yii::$app->params['serverHost'].$avatar2;
                             }
                             $other['create_time'] = date('m月d日', strtotime($other['create_time']));
                             $other['color'] = Yii::$app->params['red'];
@@ -179,17 +176,8 @@ class Scores  extends \yii\db\ActiveRecord
 
                     foreach ($tais as $tai) {
                         if ($tai['room_id'] == $val['room_id']) {
-                            if ($tai['user_id']) {
-                                $avatar3 = Users::getLocalAvatar($tai['user_id']);
-                                if ($avatar3) {
-                                    $tai['avatar'] = Yii::$app->params['serverHost'].$avatar3;
-                                } else {
-                                    $tai['avatar'] = Users::getAvatar($tai['user_id']);
-                                }
-
-                            } else {
-                                $tai['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
-                            }
+                            $tai['local_avatar'] = Yii::$app->params['image_default'];
+                            $tai['avatar'] = Yii::$app->params['image_fa'];
                             $tai['create_time'] = date('m月d日', strtotime($tai['create_time']));
                             $tai['color'] = Yii::$app->params['red'];
                             if ($tai['score'] < 0) {
