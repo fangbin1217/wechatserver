@@ -671,7 +671,7 @@ class Users  extends \yii\db\ActiveRecord
         $Users = Users::find()->select(['avatar'])->where(['id'=>$user_id])->asArray()->one();
         if ($Users) {
             Yii::$app->redis->set('AVATAR#'.$user_id, $Users['avatar']);
-            Yii::$app->redis->expire('AVATAR#'.$user_id, Yii::$app->params['history_avatar']);
+            Yii::$app->redis->expire('AVATAR#'.$user_id, Yii::$app->params['wechat_avatar']);
             return $Users['avatar'];
         }
         return '';
@@ -685,12 +685,25 @@ class Users  extends \yii\db\ActiveRecord
         $Users = Users::find()->select(['nickname'])->where(['id'=>$user_id])->asArray()->one();
         if ($Users) {
             Yii::$app->redis->set('NICKNAME#'.$user_id, $Users['nickname']);
-            Yii::$app->redis->expire('NICKNAME#'.$user_id, Yii::$app->params['history_nickname']);
+            Yii::$app->redis->expire('NICKNAME#'.$user_id, Yii::$app->params['wechat_nickname']);
             return $Users['nickname'];
         }
         return '';
     }
 
+    static public function getLocalAvatar($user_id) {
+        $cache = Yii::$app->redis->get('LOCALAVATAR#'.$user_id);
+        if ($cache) {
+            return $cache;
+        }
+        $Users = Users::find()->select(['local_avatar'])->where(['id'=>$user_id])->asArray()->one();
+        if ($Users) {
+            Yii::$app->redis->set('LOCALAVATAR#'.$user_id, $Users['local_avatar']);
+            Yii::$app->redis->expire('LOCALAVATAR#'.$user_id, Yii::$app->params['history_avatar']);
+            return $Users['local_avatar'];
+        }
+        return '';
+    }
 
 
 

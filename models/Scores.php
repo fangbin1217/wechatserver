@@ -96,7 +96,12 @@ class Scores  extends \yii\db\ActiveRecord
                         $to['avatar'] = '';
                         $to['nickname'] = '';
                         if ($to['user_id']) {
-                            $to['avatar'] = Users::getAvatar($to['user_id']);
+                            $avatar = Users::getLocalAvatar($to['user_id']);
+                            if ($avatar) {
+                                $to['avatar'] = Yii::$app->params['serverHost'].$avatar;
+                            } else {
+                                $to['avatar'] = Users::getAvatar($to['user_id']);
+                            }
                             $to['nickname'] = Users::getNickname($to['user_id']);
                         } else {
                             $to['nickname'] = Yii::$app->params['name_fa'];
@@ -137,7 +142,14 @@ class Scores  extends \yii\db\ActiveRecord
 
             if ($others && $tais) {
                 foreach ($RoomUsers as $val) {
-                    $val['avatar'] = Users::getAvatar($val['user_id']);
+
+                    $avatar = Users::getLocalAvatar($val['user_id']);
+                    if ($avatar) {
+                        $val['avatar'] = Yii::$app->params['serverHost'].$avatar;
+                    } else {
+                        $val['avatar'] = Users::getAvatar($val['user_id']);
+                    }
+
                     $val['create_time'] = date('m月d日', strtotime($val['create_time']));
                     $val['color'] = Yii::$app->params['red'];
                     if ($val['score'] < 0) {
@@ -147,7 +159,12 @@ class Scores  extends \yii\db\ActiveRecord
                     foreach ($others as $other) {
                         if ($other['room_id'] == $val['room_id']) {
                             if ($other['user_id']) {
-                                $other['avatar'] = Users::getAvatar($other['user_id']);
+                                $avatar2 = Users::getLocalAvatar($other['user_id']);
+                                if ($avatar2) {
+                                    $other['avatar'] = Yii::$app->params['serverHost'].$avatar2;
+                                } else {
+                                    $other['avatar'] = Users::getAvatar($other['user_id']);
+                                }
                             } else {
                                 $other['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
@@ -163,7 +180,13 @@ class Scores  extends \yii\db\ActiveRecord
                     foreach ($tais as $tai) {
                         if ($tai['room_id'] == $val['room_id']) {
                             if ($tai['user_id']) {
-                                $tai['avatar'] = Users::getAvatar($tai['user_id']);
+                                $avatar3 = Users::getLocalAvatar($tai['user_id']);
+                                if ($avatar3) {
+                                    $tai['avatar'] = Yii::$app->params['serverHost'].$avatar3;
+                                } else {
+                                    $tai['avatar'] = Users::getAvatar($tai['user_id']);
+                                }
+
                             } else {
                                 $tai['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
