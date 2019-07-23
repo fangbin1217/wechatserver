@@ -177,7 +177,7 @@ class Users  extends \yii\db\ActiveRecord
         if ($myAll) {
             $myIds = array_column($myAll, 'room_id');
             if ($myIds) {
-                $all_rooms = Rooms::find()->where(['is_del' => 0])->andWhere(['in', 'id', $myIds])->andWhere(['in', 'status', [0, 1]])->asArray()->all();
+                $all_rooms = Rooms::find()->where(['is_del' => 0])->andWhere(['in', 'id', $myIds])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->all();
                 if ($all_rooms) {
                     Users::$error_msg = '当前用户已绑定';
                     return false;
@@ -185,7 +185,7 @@ class Users  extends \yii\db\ActiveRecord
             }
         }
         //查找最新房间数据
-        $room = Rooms::find()->where(['user_id'=>$binded_user_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+        $room = Rooms::find()->where(['user_id'=>$binded_user_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
         $date = date('Y-m-d H:i:s');
         $time = time() + Yii::$app->params['roomCacheTime'];
         if (!$room) {
@@ -258,7 +258,7 @@ class Users  extends \yii\db\ActiveRecord
                     $Rooms->expire_time = $time;
                     if ($mySort == 4) {
                         //更改状态
-                        $Rooms->status = 1;
+                        $Rooms->status = Rooms::STATUS_BEGINING;
                     }
                     if (!$Rooms->save()) {
                         Users::$error_msg = '更改房间状态失败';
@@ -276,7 +276,7 @@ class Users  extends \yii\db\ActiveRecord
 
 
 
-            } elseif ($room['status'] == 1) {
+            } elseif ($room['status'] == Rooms::STATUS_BEGINING) {
                 Users::$error_msg = '房间状态进行中，不可绑定';
                 return false;
             }
@@ -320,7 +320,7 @@ class Users  extends \yii\db\ActiveRecord
                     if ($my) {
                         $room_id = $my['room_id'];
 
-                        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+                        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
                         if (!$Rooms) {
                             Users::$error_msg = '房间状态已结束';
                             return false;
@@ -463,7 +463,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $room_id = $my['room_id'];
-        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
         if (!$Rooms) {
             Users::$error_msg = '房间状态已结束';
             return false;
@@ -527,7 +527,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $room_id = $my['room_id'];
-        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
         if (!$Rooms) {
             Users::$error_msg = '该用户所在房间不是准备中或进行中';
             return false;
@@ -551,8 +551,8 @@ class Users  extends \yii\db\ActiveRecord
                     $val['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                 }
 
-                if (mb_strlen($val['nickname'], 'utf-8') > 8) {
-                    $val['nickname'] = mb_substr($val['nickname'], 0, 8);
+                if (mb_strlen($val['nickname'], 'utf-8') > Yii::$app->params['MAX_NICKNAME']) {
+                    $val['nickname'] = mb_substr($val['nickname'], 0, Yii::$app->params['MAX_NICKNAME']);
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
@@ -576,7 +576,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $room_id = $my['room_id'];
-        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [0,1]])->asArray()->one();
+        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
         if (!$Rooms) {
             Users::$error_msg = '该用户所在房间不是准备中或进行中';
             return false;

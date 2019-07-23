@@ -44,9 +44,9 @@ class Scores  extends \yii\db\ActiveRecord
             foreach ($our as &$val) {
 
                 $sorts[$val['user_id']] = ['user_id'=>$val['user_id'], 'sorts'=>$val['sorts']];
-                $mycolor = '#E64340';
+                $mycolor = Yii::$app->params['red'];
                 if ($val['score'] < 0) {
-                    $mycolor = '#09BB07';
+                    $mycolor = Yii::$app->params['green'];
                 }
                 $total[] = [
                     'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor, 'date' => date('Y年m月d日', strtotime($val['create_time']))
@@ -67,9 +67,9 @@ class Scores  extends \yii\db\ActiveRecord
                         $tt['score'] = $score['score'];
                         $tt['times'] = $score['times'];
                         if($tt['score'] >= 0) {
-                            $tt['color'] = '#E64340';
+                            $tt['color'] = Yii::$app->params['red'];
                         } else {
-                            $tt['color'] = '#09BB07';
+                            $tt['color'] = Yii::$app->params['green'];
                         }
                         $tmp[$score['times']][] = $tt;
                     }
@@ -119,7 +119,7 @@ class Scores  extends \yii\db\ActiveRecord
         $result = [];
 
         $room_ids = [];
-        $Rooms = Rooms::find()->where(['in', 'status', [0,1]])->andWhere(['is_del'=>0])->asArray()->all();
+        $Rooms = Rooms::find()->where(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->andWhere(['is_del'=>0])->asArray()->all();
         if ($Rooms) {
             $room_ids = array_column($Rooms, 'id');
         }
@@ -139,9 +139,9 @@ class Scores  extends \yii\db\ActiveRecord
                 foreach ($RoomUsers as $val) {
                     $val['avatar'] = Users::getAvatar($val['user_id']);
                     $val['create_time'] = date('m月d日', strtotime($val['create_time']));
-                    $val['color'] = '#E64340';
+                    $val['color'] = Yii::$app->params['red'];
                     if ($val['score'] < 0) {
-                        $val['color'] = '#09BB07';
+                        $val['color'] = Yii::$app->params['green'];
                     }
                     $result[$val['room_id']][] = $val;
                     foreach ($others as $other) {
@@ -152,9 +152,9 @@ class Scores  extends \yii\db\ActiveRecord
                                 $other['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
                             $other['create_time'] = date('m月d日', strtotime($other['create_time']));
-                            $other['color'] = '#E64340';
+                            $other['color'] = Yii::$app->params['red'];
                             if ($other['score'] < 0) {
-                                $other['color'] = '#09BB07';
+                                $other['color'] = Yii::$app->params['green'];
                             }
                             $result[$val['room_id']][] = $other;
                         }
@@ -168,9 +168,9 @@ class Scores  extends \yii\db\ActiveRecord
                                 $tai['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
                             }
                             $tai['create_time'] = date('m月d日', strtotime($tai['create_time']));
-                            $tai['color'] = '#E64340';
+                            $tai['color'] = Yii::$app->params['red'];
                             if ($tai['score'] < 0) {
-                                $tai['color'] = '#09BB07';
+                                $tai['color'] = Yii::$app->params['green'];
                             }
                             $result[$val['room_id']][] = $tai;
                         }
@@ -193,12 +193,12 @@ class Scores  extends \yii\db\ActiveRecord
         if ($RoomUsers) {
 
             $result = [
-                'totalScore' => 0, 'totalScoreColor'=> '#E64340',
-                'cjScore' => 0, 'cjScoreColor'=> '#E64340',
-                'maxScore'=>0, 'maxScoreColor' => '#E64340',
-                'minScore'=>0, 'minScoreColor' => '#E64340',
-                'jsScore'=>0, 'jsScoreColor' => '#353535',
-                'timesScore'=>0, 'timesScoreColor' => '#353535'
+                'totalScore' => 0, 'totalScoreColor'=> Yii::$app->params['red'],
+                'cjScore' => 0, 'cjScoreColor'=> Yii::$app->params['red'],
+                'maxScore'=>0, 'maxScoreColor' => Yii::$app->params['red'],
+                'minScore'=>0, 'minScoreColor' => Yii::$app->params['red'],
+                'jsScore'=>0, 'jsScoreColor' => Yii::$app->params['black'],
+                'timesScore'=>0, 'timesScoreColor' => Yii::$app->params['black']
             ];
 
             $totalTime = 0;
@@ -210,12 +210,12 @@ class Scores  extends \yii\db\ActiveRecord
                 $totalTime += strtotime($val['update_time']) - strtotime($val['create_time']);
             }
             if ($result['totalScore'] < 0) {
-                $result['totalScoreColor'] = '#09BB07';
+                $result['totalScoreColor'] = Yii::$app->params['green'];
             }
 
             $result['cjScore'] = round($result['totalScore']/$result['timesScore']);
             if ($result['cjScore'] < 0) {
-                $result['cjScoreColor'] = '#09BB07';
+                $result['cjScoreColor'] = Yii::$app->params['green'];
             }
 
 
@@ -225,11 +225,11 @@ class Scores  extends \yii\db\ActiveRecord
             $RoomUsers2 = Users::arrSort($RoomUsers, 'score', 'desc');
             $result['maxScore'] = $RoomUsers2[0]['score'] ?? 0;
             if ($result['maxScore'] < 0) {
-                $result['maxScoreColor'] = '#09BB07';
+                $result['maxScoreColor'] = Yii::$app->params['green'];
             }
             $result['minScore'] = $RoomUsers2[$result['timesScore'] - 1]['score'] ?? 0;
             if ($result['minScore'] < 0) {
-                $result['minScoreColor'] = '#09BB07';
+                $result['minScoreColor'] = Yii::$app->params['green'];
             }
 
         }

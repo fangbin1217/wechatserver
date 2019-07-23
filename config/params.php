@@ -20,6 +20,10 @@ $commonParams = [
     'qrcodeImageTime' => 2592000, //qrcode缓存
     'XCX_ACCESS_TOKEN' => 7200,
     'MAX_PERSON_NUM' => 5, //最大人数上限
+    'MAX_NICKNAME' => 8,
+    'red' => '#E64340',
+    'green' => '#09BB07',
+    'black'=> '#353535',
 ];
 
 if (YII_ENV == 'dev') {
