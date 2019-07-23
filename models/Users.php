@@ -138,9 +138,13 @@ class Users  extends \yii\db\ActiveRecord
         return '';
     }
 
-    static public function saveImage($buffer) {
+    static public function saveImage($buffer, $firstPath = '') {
         //生成图片
-        $imgDir = $_SERVER['DOCUMENT_ROOT'];
+        if (!$firstPath) {
+            $imgDir = $_SERVER['DOCUMENT_ROOT'];
+        } else {
+            $imgDir = $firstPath;
+        }
         $imgDir2 = $imgDir.'/images/'.date('Ym');
         if(!is_dir($imgDir2)) {
             mkdir($imgDir2, 0777);
@@ -398,9 +402,9 @@ class Users  extends \yii\db\ActiveRecord
                 if ($saveList) {
                     $Rooms2 = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->one();
                     if ($isTotalScore) {  //如果是总计  改为已结束
-                        $Rooms2->status = 2;
+                        $Rooms2->status = Rooms::STATUS_IS_END;
                     } else {
-                        $Rooms2->status = 1;
+                        $Rooms2->status = Rooms::STATUS_BEGINING;
                     }
                     $Rooms2->update_time = $date;
                     $Rooms2->expire_time = time() + Yii::$app->params['roomCacheTime'];
@@ -556,7 +560,7 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
-                    'zf_index'=>0, 'color'=> '#E64340', 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
+                    'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
                 ];
             }
         }
@@ -640,20 +644,6 @@ class Users  extends \yii\db\ActiveRecord
 
     }
 
-    static public function queryTotalScore() {
-
-    }
-
-    //查询已完成具体一个
-    static public function queryHistoryDetail($user_id) {
-
-    }
-
-    //查询所有历史数据总计
-    static public function queryHistoryAll($user_id) {
-
-    }
-
 
     //二位数组排序
     static public function arrSort($array, $key, $order="desc"){
@@ -700,6 +690,7 @@ class Users  extends \yii\db\ActiveRecord
         }
         return '';
     }
+
 
 
 

@@ -7,10 +7,11 @@
 
 namespace app\commands;
 
+use Yii;
 use yii\console\Controller;
 use yii\console\ExitCode;
 use app\models\Rooms;
-
+use app\models\Users;
 
 /**
  * This command echoes the first argument that you have entered.
@@ -39,6 +40,46 @@ class RoomController extends Controller
         } else {
             echo "fail\n";
         }
+        return ExitCode::OK;
+    }
+
+    public function actionImage($message = 'test') {
+        $len = Yii::$app->redis->llen('Q#AVATAR');
+        $max = 10;
+        if ($len < $max) {
+            $max = $len;
+        }
+
+        $success = 0;
+        for ($i=0;$i<$max;$i++) {
+            $uid = Yii::$app->redis->rpop('Q#AVATAR');
+
+            $avatar = Users::getAvatar($uid);
+            if ($avatar) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $avatar);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 13);
+                $output = curl_exec($ch);
+                $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($codes == 200) {
+                    $saveImage = Users::saveImage($output, Yii::$app->params['imageFirstPath']);
+                    if ($saveImage) {
+                        $Users = Users::find()->where(['id'=>$uid])->one();
+                        $Users->local_avatar = $saveImage;
+                        $Users->update_time = date('Y-m-d H:i:s');
+                        if ($Users->save()) {
+                            $success++;
+                        }
+                    }
+                }
+            }
+            sleep(2);
+        }
+        echo " total:$max success:$max \n";
         return ExitCode::OK;
     }
 }

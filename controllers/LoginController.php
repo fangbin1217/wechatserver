@@ -124,6 +124,9 @@ class LoginController extends Controller
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
                 }
+
+                //生成本地图片放入队列
+                Yii::$app->redis->lpush('Q#AVATAR', $users->id);
             }
 
         } else {
@@ -168,15 +171,8 @@ class LoginController extends Controller
     }
 
     public function actionTest() {
-        $params = [
-            ['user_id'=>1, 'score'=>'49'],['user_id'=>2, 'score'=>41],
-            ['user_id'=>3, 'score'=>'-30'],['user_id'=>4, 'score'=>-70],['user_id'=>0, 'score'=>10],
-
-        ];
-        //$isSave = (new Scores())->getLastYearScore(2);
-        $a  = (new Scores())->getLastYearScore(2);
-        print_r($a);
-        exit;
+        $len = Yii::$app->redis->llen('Q#AVATAR');
+        echo $len;
     }
 
 
