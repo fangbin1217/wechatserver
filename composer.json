@@ -66,5 +66,10 @@
             "type": "composer",
             "url": "https://asset-packagist.org"
         }
-    ]
+    ],
+    "autoload": {
+        "files": [
+            "common/helpers.php"
+        ]
+    }
 }

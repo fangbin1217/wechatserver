@@ -174,7 +174,7 @@ class LoginController extends Controller
         $len = Yii::$app->redis->llen('Q#AVATAR');
 
         //echo Users::getMyQrcode(2);exit;
-        echo $len;
+        echo foo();
     }
 
 
