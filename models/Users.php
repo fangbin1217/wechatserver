@@ -90,6 +90,14 @@ class Users  extends \yii\db\ActiveRecord
             return $cache;
         }
 
+        $users = Users::find()->where(['id'=>$uid])->asArray()->one();
+        if ($users && $users['qrcode']) {
+            Yii::$app->redis->set('QR#'.$uid, $users['qrcode']);
+            Yii::$app->redis->expire('QR#'.$uid, Yii::$app->params['qrcodeImageTime']);
+            return $users['qrcode'];
+        }
+
+
         $saveQrcode = Users::saveQrcode($uid);
         if ($saveQrcode) {
             Yii::$app->redis->set('QR#'.$uid, $saveQrcode);
@@ -697,7 +705,7 @@ class Users  extends \yii\db\ActiveRecord
             return $cache;
         }
         $Users = Users::find()->select(['local_avatar'])->where(['id'=>$user_id])->asArray()->one();
-        if ($Users) {
+        if ($Users && $Users['local_avatar']) {
             Yii::$app->redis->set('LOCALAVATAR#'.$user_id, $Users['local_avatar']);
             Yii::$app->redis->expire('LOCALAVATAR#'.$user_id, Yii::$app->params['history_avatar']);
             return $Users['local_avatar'];

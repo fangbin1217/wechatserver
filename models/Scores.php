@@ -98,7 +98,6 @@ class Scores  extends \yii\db\ActiveRecord
                         $to['local_avatar'] = Yii::$app->params['image_default'];
                         if ($to['user_id']) {
                             $to['avatar'] = Users::getAvatar($to['user_id']);
-
                             $avatar = Users::getLocalAvatar($to['user_id']);
                             if ($avatar) {
                                 $to['local_avatar'] = Yii::$app->params['serverHost'].$avatar;
