@@ -68,6 +68,13 @@ class LoginController extends Controller
         $nickname = $params['nickname'] ?? '';
         $avatar = $params['avatar'] ?? '';
         $bind_uid = $params['bind_uid'] ?? '';
+
+
+        $gender = $params['gender'] ?? 0;
+        $province = $params['province'] ?? '';
+        $city = $params['city'] ?? '';
+        $country = $params['country'] ?? '';
+
         $this->jsonResponse['msg'] = 'do login error';
 
         if (!$openid) {
@@ -97,6 +104,12 @@ class LoginController extends Controller
             $users->update_time = $date;
             $users->login_ip = Yii::$app->request->getUserIP();
             $users->login_time = $date;
+
+            $users->gender = $gender;
+            $users->province = $province;
+            $users->city = $city;
+            $users->country = $country;
+
             if ($users->save()) {
                 $result['code'] = 0;
                 $this->jsonResponse['code'] = 0;
@@ -109,16 +122,6 @@ class LoginController extends Controller
                 Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                 Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
 
-                /*
-                $saveQrcode = Users::saveQrcode($users->id);
-                if ($saveQrcode) {
-                    $users2 = Users::find()->where(['id'=>$users->id])->one();
-                    if ($users2) {
-                        $users2->qrcode = $saveQrcode;
-                        $users2->save();
-                    }
-                }
-                */
 
                 //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
@@ -140,14 +143,18 @@ class LoginController extends Controller
             $users->login_ip = Yii::$app->request->getUserIP();
             $users->login_time = $date;
 
-            /*
-            if (!$usersInfo['qrcode']) {
-                $saveQrcode = Users::saveQrcode($usersInfo['id']);
-                if ($saveQrcode) {
-                    $users->qrcode = $saveQrcode;
-                }
+            if ($gender) {
+                $users->gender = $gender;
             }
-            */
+            if ($province) {
+                $users->province = $province;
+            }
+            if ($city) {
+                $users->city = $city;
+            }
+            if ($country) {
+                $users->country = $country;
+            }
 
             if ($users->save()) {
                 $this->jsonResponse['code'] = 0;
