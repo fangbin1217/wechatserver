@@ -149,7 +149,7 @@ class Scores  extends \yii\db\ActiveRecord
                         $val['local_avatar'] = Yii::$app->params['serverHost'] . $avatar;
                     }
 
-                    $val['create_time'] = date('m月d日', strtotime($val['create_time']));
+                    $val['create_time'] = date('m.d', strtotime($val['create_time']));
                     $val['color'] = Yii::$app->params['red'];
                     if ($val['score'] < 0) {
                         $val['color'] = Yii::$app->params['green'];
@@ -164,7 +164,7 @@ class Scores  extends \yii\db\ActiveRecord
                             if ($avatar2) {
                                 $other['local_avatar'] = Yii::$app->params['serverHost'].$avatar2;
                             }
-                            $other['create_time'] = date('m月d日', strtotime($other['create_time']));
+                            $other['create_time'] = date('m.d', strtotime($other['create_time']));
                             $other['color'] = Yii::$app->params['red'];
                             if ($other['score'] < 0) {
                                 $other['color'] = Yii::$app->params['green'];
@@ -177,7 +177,7 @@ class Scores  extends \yii\db\ActiveRecord
                         if ($tai['room_id'] == $val['room_id']) {
                             $tai['local_avatar'] = Yii::$app->params['image_default'];
                             $tai['avatar'] = Yii::$app->params['image_fa'];
-                            $tai['create_time'] = date('m月d日', strtotime($tai['create_time']));
+                            $tai['create_time'] = date('m.d', strtotime($tai['create_time']));
                             $tai['color'] = Yii::$app->params['red'];
                             if ($tai['score'] < 0) {
                                 $tai['color'] = Yii::$app->params['green'];
