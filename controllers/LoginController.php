@@ -79,11 +79,10 @@ class LoginController extends Controller
 
         if (!$openid) {
             $this->jsonResponse['msg'] = 'openid empty';
+            return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
         }
 
-        if (!$nickname || !$avatar) {
-            $this->jsonResponse['msg'] = 'nickname or avatar empty';
-        }
+
 
         $usersInfo = Users::getUserByOpenId($openid);
         $time = time();
@@ -92,6 +91,10 @@ class LoginController extends Controller
         $username = uniqid();
         $access_token = strtoupper(md5($openid.$session_key.rand(1,1000)));
         if (!$usersInfo) {
+            if (!$nickname || !$avatar) {
+                $this->jsonResponse['msg'] = 'nickname or avatar empty';
+                return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+            }
             $users = new Users();
             $users->nickname = $nickname;
             $users->avatar = $avatar;
@@ -134,8 +137,12 @@ class LoginController extends Controller
 
         } else {
             $users = Users::find()->where(['id'=>$usersInfo['id']])->one();
-            $users->nickname = $nickname;
-            $users->avatar = $avatar;
+            if ($nickname) {
+                $users->nickname = $nickname;
+            }
+            if ($avatar) {
+                $users->avatar = $avatar;
+            }
             $users->session_key = $session_key;
             $users->access_token = $access_token;
             $users->expire_time = $expire_time;
