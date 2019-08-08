@@ -91,10 +91,13 @@ class LoginController extends Controller
         $username = uniqid();
         $access_token = strtoupper(md5($openid.$session_key.rand(1,1000)));
         if (!$usersInfo) {
-            if (!$nickname || !$avatar) {
-                $this->jsonResponse['msg'] = 'nickname or avatar empty';
-                return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+            if (!$nickname) {
+                $nickname = '未设置';
             }
+            if (!$avatar) {
+                $avatar = Yii::$app->params['image_default'];
+            }
+
             $users = new Users();
             $users->nickname = $nickname;
             $users->avatar = $avatar;
