@@ -26,6 +26,9 @@ $commonParams = [
     'red' => '#E64340',
     'green' => '#09BB07',
     'black'=> '#353535',
+    'page_size' => 2,
+    'image_danwei' => '../../images/danwei.png',
+    'shop_image' => 'images/shops/default.png'
 ];
 
 if (YII_ENV == 'dev') {

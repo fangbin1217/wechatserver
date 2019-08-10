@@ -2,14 +2,17 @@
 
 namespace app\controllers;
 
-use app\models\Scores;
 use app\models\Users;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-use app\models\Rooms;
+
+use app\models\Shops;
+use app\models\Positions;
+
+
 class LoginController extends Controller
 {
 
@@ -188,10 +191,29 @@ class LoginController extends Controller
     }
 
     public function actionTest() {
-        $len = Yii::$app->redis->llen('Q#AVATAR');
-
-        //echo Users::getMyQrcode(2);exit;
-        echo foo();
+        $params = json_decode(file_get_contents('php://input'),true);
+        $access_token = $params['access_token'] ?? '';
+        $cache = Yii::$app->redis->get('T#' . $access_token);
+        if ($cache || true) {
+            $cacheList = json_decode($cache, true);
+            $params['uid'] = $cacheList['id'];
+            $params['uid'] = 101;
+            $params['city_name'] = $params['city_name'] ?? '';
+            $params['city_name'] = trim($params['city_name']);
+            if (!$params['city_name']) {
+                $this->jsonResponse['msg'] = '获取城市失败';
+                return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+            }
+            $params['province_name'] = $params['province_name'] ?? '';
+            $params['province_name'] = trim($params['province_name']);
+            $isSave = (new Positions())->saveP($params);
+            $this->jsonResponse['msg'] = '定位保存失败';
+            if ($isSave) {
+                $this->jsonResponse['code'] = 0;
+                $this->jsonResponse['msg'] = 'success';
+            }
+        }
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
 
 
