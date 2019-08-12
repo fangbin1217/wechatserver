@@ -45,7 +45,7 @@ class Shops  extends \yii\db\ActiveRecord
                 }
                 $tmp = [];
                 $tmp = [
-                    'id' => $val['id'], 'name' => $val['name'], 'logo' => Yii::$app->params['serverHost'].Yii::$app->params['shop_image'],
+                    'id' => $val['id'], 'name' => $val['name'], 'logo' => Yii::$app->params['imgHost'].Yii::$app->params['shop_image'],
                     'create_time' => $val['create_time'], 'province_name' => $val['province_name'],'city_name' => $val['city_name'],  'address' => $val['address'],
                     'telphone' => $val['telphone'], 'star' => $val['star'],'business_time'=>$val['business_time'], 'label_list' => []
                 ];

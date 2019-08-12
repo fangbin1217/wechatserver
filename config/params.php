@@ -33,9 +33,11 @@ $commonParams = [
 
 if (YII_ENV == 'dev') {
     $commonParams['serverHost'] = 'http://www.wechatserver.com/';
+    $commonParams['imgHost'] = 'http://www.wechatserver.com/images/shops/';
     $commonParams['imageFirstPath'] = '/usr/local/var/www/wechatserver/web';
 } else {
     $commonParams['serverHost'] = 'https://jifen.myshared.top/';
+    $commonParams['imgHost'] = 'https://img.myshared.top/';
     $commonParams['imageFirstPath'] = '/home/www/jifen/wechatserver/web';
 
 }
