@@ -84,13 +84,13 @@ class Shops  extends \yii\db\ActiveRecord
         $params['star'] = $params['star'] ?? 0;
         $params['labels'] = $params['labels'] ?? [];
 
-        if (!$params['shop_id']) {
-            Shops::$error_msg = 'shop_id empty';
+        if (!$params['shop_id'] || !$params['uid']) {
+            Shops::$error_msg = 'shop_id or uid empty';
             return false;
         }
 
         if (!in_array($params['star'], [1,2,3,4,5])) {
-            Shops::$error_msg = 'star empty';
+            Shops::$error_msg = '评分不能为空';
             return false;
         }
 
@@ -109,7 +109,7 @@ class Shops  extends \yii\db\ActiveRecord
 
         $labels = labels::find()->where(['is_good'=>1])->asArray()->all();
         if (!$labels) {
-            Shops::$error_msg = '暂无好评标签！';
+            Shops::$error_msg = '无好评标签！';
             return false;
         }
 
@@ -135,7 +135,7 @@ class Shops  extends \yii\db\ActiveRecord
             $st->star = $params['star'];
             $st->create_time = $date;
             if (!$st->save()) {
-                Shops::$error_msg = '保存星级失败！';
+                Shops::$error_msg = '保存星级失败';
                 return false;
             }
             $total_stars += $params['star'];
@@ -165,7 +165,7 @@ class Shops  extends \yii\db\ActiveRecord
                             $SL->user_id = $params['uid'];
                             $SL->create_time = $date;
                             if (!$SL->save()) {
-                                Shops::$error_msg = '更新标签失败！';
+                                Shops::$error_msg = '更新标签失败';
                                 return false;
                             }
                         } else {
@@ -176,7 +176,7 @@ class Shops  extends \yii\db\ActiveRecord
                             $SL->user_id = $params['uid'];
                             $SL->create_time = $date;
                             if (!$SL->save()) {
-                                Shops::$error_msg = '保存标签失败！';
+                                Shops::$error_msg = '保存标签失败';
                                 return false;
                             }
                         }
@@ -197,7 +197,7 @@ class Shops  extends \yii\db\ActiveRecord
             $Shops2->sorts = $SORTS;
             $Shops2->update_time = date('Y-m-d H:i:s');
             if (!$Shops2->save()) {
-                Shops::$error_msg = '更新商家失败！';
+                Shops::$error_msg = '更新商家失败';
                 return false;
             }
 
@@ -205,16 +205,16 @@ class Shops  extends \yii\db\ActiveRecord
             return true;
         } catch (Exception $E) {
             $trans->rollBack();
+            Shops::$error_msg = '保存失败';
             return false;
         }
-
-        Shops::$error_msg = '评论失败！';
+        Shops::$error_msg = '保存失败';
         return false;
-
     }
 
     public function queryShop($params) {
         $params['shop_id'] = $params['shop_id'] ?? 0;
+
         if (!$params['shop_id']) {
             return [];
         }
@@ -237,12 +237,14 @@ class Shops  extends \yii\db\ActiveRecord
             foreach ($labels as &$val) {
                 $labelsList[] = [
                     'label_id' => $val['id'], 'name' => $val['name'],
-                    'is_choose' => 0, 'color' => '#888888', 'is_good' => $val['is_good']
+                    'is_choose' => 0, 'color' => '#cdcdcd', 'is_good' => $val['is_good']
                 ];
             }
         }
-        $Shops['labels'] = $labelsList;
-        return $Shops;
+        $res = [
+            'shops' => $Shops, 'labels' => $labelsList
+        ];
+        return $res;
 
     }
 

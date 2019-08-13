@@ -9,9 +9,6 @@ use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 
-use app\models\Shops;
-use app\models\Positions;
-
 
 class LoginController extends Controller
 {
@@ -189,10 +186,4 @@ class LoginController extends Controller
 
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
-
-    public function actionTest() {
-
-    }
-
-
 }
