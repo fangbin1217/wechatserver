@@ -6,6 +6,7 @@ use Yii;
 class Shops  extends \yii\db\ActiveRecord
 {
 
+    public static $error_msg = '';
 
     /**
      * {@inheritdoc}
@@ -15,7 +16,7 @@ class Shops  extends \yii\db\ActiveRecord
         return 'shops';
     }
 
-    static public function shopList($page = 1, $access_token = '',$city_name = '',$province_name = '',  $shop_name = '') {
+    static public function shopList($page = 1, $city_name = '',$province_name = '',  $shop_name = '') {
         if (!$page) {
             $page = 1;
         }
@@ -47,7 +48,7 @@ class Shops  extends \yii\db\ActiveRecord
                 $tmp = [
                     'id' => $val['id'], 'name' => $val['name'], 'logo' => Yii::$app->params['imgHost'].Yii::$app->params['shop_default_img'],
                     'create_time' => $val['create_time'], 'province_name' => $val['province_name'],'city_name' => $val['city_name'],  'address' => $val['address'],
-                    'telphone' => $val['telphone'], 'star' => $val['star'],'business_time'=>$val['business_time'], 'label_list' => []
+                    'telphone' => $val['telphone'], 'star' => $val['star'],'business_time'=>$val['business_time'], 'label_list' => [], 'left' => '0px','width' => '0px'
                 ];
                 if ($val['logo']) {
                     $tmp['logo'] = Yii::$app->params['imgHost'].$val['logo'];
@@ -59,6 +60,12 @@ class Shops  extends \yii\db\ActiveRecord
                         }
                     }
                 }
+
+                $left = (int) ((5 - $val['star'])*25);
+                if ($left > 0) {
+                    $tmp['width'] = $left.'px';
+                    $tmp['left'] = '-'.$left.'px';
+                }
                 $list[] =$tmp;
 
             }
@@ -68,4 +75,176 @@ class Shops  extends \yii\db\ActiveRecord
         }
         return $list;
     }
+
+    public static function saveComment($params) {
+
+        $params['shop_id'] = $params['shop_id'] ?? 0;
+        $params['shop_id'] = (int) $params['shop_id'];
+        $params['uid'] = $params['uid'] ?? 0;
+        $params['star'] = $params['star'] ?? 0;
+        $params['labels'] = $params['labels'] ?? [];
+
+        if (!$params['shop_id']) {
+            Shops::$error_msg = 'shop_id empty';
+            return false;
+        }
+
+        if (!in_array($params['star'], [1,2,3,4,5])) {
+            Shops::$error_msg = 'star empty';
+            return false;
+        }
+
+        $Shops = Shops::find()->where(['id'=>$params['shop_id'], 'is_del'=>0])->asArray()->one();
+        if (!$Shops) {
+            Shops::$error_msg = 'shop data lost';
+            return false;
+        }
+
+        $date = date('Y-m-d');
+        $ShopStar = ShopStar::find()->where(['shop_id'=>$params['shop_id'], 'user_id'=>$params['uid'], 'create_time'=>$date])->asArray()->one();
+        if ($ShopStar) {
+            Shops::$error_msg = '今日已评论！';
+            return false;
+        }
+
+        $labels = labels::find()->where(['is_good'=>1])->asArray()->all();
+        if (!$labels) {
+            Shops::$error_msg = '暂无好评标签！';
+            return false;
+        }
+
+
+
+        try {
+            $trans = Yii::$app->getDb()->beginTransaction();
+
+
+            $total_stars = 0;
+            $star_times = 0;
+            $ShopStars = ShopStar::find()->where(['shop_id'=>$params['shop_id']])->asArray()->all();
+            if ($ShopStars) {
+                foreach ($ShopStars as $val) {
+                    $total_stars += $val['star'];
+                }
+                $star_times = count($ShopStars);
+            }
+
+            $st = new ShopStar();
+            $st->shop_id = $params['shop_id'];
+            $st->user_id = $params['uid'];
+            $st->star = $params['star'];
+            $st->create_time = $date;
+            if (!$st->save()) {
+                Shops::$error_msg = '保存星级失败！';
+                return false;
+            }
+            $total_stars += $params['star'];
+
+            $star_times += 1;
+            $ava_star = round($total_stars/$star_times, 1);
+
+
+
+            $total_labels = 0;
+
+            $labels_ids = array_column($labels, 'id');
+            $sl2 = ShopLabel::find()->where(['shop_id' => $params['shop_id'], 'is_del' => 0])->andWhere(['in', 'label_id', $labels_ids])->asArray()->all();
+            if ($sl2) {
+                foreach ($sl2 as $vv) {
+                    $total_labels += $vv['counts'];
+                }
+            }
+
+            if ($params['labels']) {
+                foreach ($params['labels'] as $val) {
+                    if ($val['is_choose']) {
+                        $ShopLabel = ShopLabel::find()->where(['shop_id'=>$params['shop_id'], 'label_id'=>$val['label_id'], 'is_del'=>0])->asArray()->one();
+                        if ($ShopLabel) {
+                            $SL = ShopLabel::find()->where(['id'=>$ShopLabel['id']])->one();
+                            $SL->counts = $ShopLabel['counts'] + 1;
+                            $SL->user_id = $params['uid'];
+                            $SL->create_time = $date;
+                            if (!$SL->save()) {
+                                Shops::$error_msg = '更新标签失败！';
+                                return false;
+                            }
+                        } else {
+                            $SL = new ShopLabel();
+                            $SL->shop_id = $params['shop_id'];
+                            $SL->label_id = $val['label_id'];
+                            $SL->counts = 1;
+                            $SL->user_id = $params['uid'];
+                            $SL->create_time = $date;
+                            if (!$SL->save()) {
+                                Shops::$error_msg = '保存标签失败！';
+                                return false;
+                            }
+                        }
+                        if (in_array($val['label_id'], $labels_ids)) {
+                            $total_labels += 1;
+                        }
+                    }
+                }
+            }
+
+
+
+            $SORTS = (int) (($ava_star*10) + $total_labels);
+
+
+            $Shops2 = Shops::find()->where(['id'=>$params['shop_id'], 'is_del'=>0])->one();
+            $Shops2->star = $ava_star;
+            $Shops2->sorts = $SORTS;
+            $Shops2->update_time = date('Y-m-d H:i:s');
+            if (!$Shops2->save()) {
+                Shops::$error_msg = '更新商家失败！';
+                return false;
+            }
+
+            $trans->commit();
+            return true;
+        } catch (Exception $E) {
+            $trans->rollBack();
+            return false;
+        }
+
+        Shops::$error_msg = '评论失败！';
+        return false;
+
+    }
+
+    public function queryShop($params) {
+        $params['shop_id'] = $params['shop_id'] ?? 0;
+        if (!$params['shop_id']) {
+            return [];
+        }
+        $Shops = Shops::find()->where(['id'=>$params['shop_id'], 'is_del'=>0])->asArray()->one();
+        if (!$Shops) {
+            return [];
+        }
+
+        if ($Shops['logo']) {
+            $Shops['logo'] = Yii::$app->params['imgHost'].$Shops['logo'];
+        } else {
+            $Shops['logo'] = Yii::$app->params['imgHost'].Yii::$app->params['shop_default_img'];
+        }
+
+
+        $labelsList = [];
+        $labels = labels::find()->where(['is_good'=>1])->asArray()->all();
+        if ($labels) {
+
+            foreach ($labels as &$val) {
+                $labelsList[] = [
+                    'label_id' => $val['id'], 'name' => $val['name'],
+                    'is_choose' => 0, 'color' => '#888888', 'is_good' => $val['is_good']
+                ];
+            }
+        }
+        $Shops['labels'] = $labelsList;
+        return $Shops;
+
+    }
+
+
 }

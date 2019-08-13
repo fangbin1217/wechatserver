@@ -48,7 +48,7 @@ class ShopController extends Controller
 
         }
 
-        $list = Shops::shopList($page, $access_token,$city_name,$province_name, $shop_name);
+        $list = Shops::shopList($page,$city_name,$province_name, $shop_name);
         $this->jsonResponse['code'] = 0;
         $this->jsonResponse['msg'] = 'success';
         $this->jsonResponse['data'] = $list;
@@ -79,6 +79,10 @@ class ShopController extends Controller
             }
         }
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
+
+    public function actionSavecomment() {
+
     }
 
 
