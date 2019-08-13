@@ -87,7 +87,6 @@ class ScoreController extends Controller
 
             }
         }
-        $this->jsonResponse['code'] = 101;
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
 
