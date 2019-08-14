@@ -13,4 +13,5 @@ class Labels  extends \yii\db\ActiveRecord
     {
         return 'labels';
     }
+    
 }
