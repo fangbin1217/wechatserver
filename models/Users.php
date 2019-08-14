@@ -545,7 +545,7 @@ class Users  extends \yii\db\ActiveRecord
             return false;
         }
         $our = RoomUsers::find()->select(
-            [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname', Users::tableName().'.avatar'])
+            [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname', Users::tableName().'.avatar', Users::tableName().'.vip'])
             ->joinWith('user')
             ->where([RoomUsers::tableName(). '.room_id'=>$room_id, RoomUsers::tableName().'.is_del'=>0])
             ->orderBy([RoomUsers::tableName().'.sorts'=>SORT_ASC])
@@ -561,13 +561,14 @@ class Users  extends \yii\db\ActiveRecord
                 if (!$val['user_id']) {
                     $val['nickname'] = Yii::$app->params['name_fa'];
                     $val['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
+                    $val['vip'] = 0;
                 }
 
                 if (mb_strlen($val['nickname'], 'utf-8') > Yii::$app->params['MAX_NICKNAME']) {
                     $val['nickname'] = mb_substr($val['nickname'], 0, Yii::$app->params['MAX_NICKNAME']);
                 }
                 $res[] = [
-                    'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'],
+                    'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'], 'vip'=> (int) $val['vip'],
                     'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
                 ];
             }

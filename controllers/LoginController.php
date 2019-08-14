@@ -122,6 +122,8 @@ class LoginController extends Controller
                 $this->jsonResponse['msg'] = 'login save success';
                 $this->jsonResponse['data'] = [
                     'access_token' => $access_token,
+                    'uid' => $users->id,
+                    'vip' => 0
                 ];
 
                 $cacheList = Users::getUserInfo($users->id);
@@ -171,6 +173,8 @@ class LoginController extends Controller
                 $this->jsonResponse['msg'] = 'login upd success';
                 $this->jsonResponse['data'] = [
                     'access_token' => $access_token,
+                    'uid' => $users->id,
+                    'vip' => $users->vip
                 ];
 
                 $cacheList = Users::getUserInfo($usersInfo['id']);

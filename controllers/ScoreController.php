@@ -78,7 +78,12 @@ class ScoreController extends Controller
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
-                $myResults = (new Scores())->getLastYearScore($cacheList['id']);
+
+                $vip = 0;
+                if (isset($cacheList['vip'])) {
+                    $vip = $cacheList['vip'];
+                }
+                $myResults = (new Scores())->getLastYearScore($cacheList['id'], $vip);
                 if ($myResults) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get results success';
