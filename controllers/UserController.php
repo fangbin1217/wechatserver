@@ -32,8 +32,13 @@ class UserController extends Controller
                 $this->jsonResponse['code'] = 0;
                 $this->jsonResponse['msg'] = 'get userinfo success';
                 $this->jsonResponse['data'] = [
-                    'id' => $cacheList['id'], 'nickname' => $cacheList['nickname'], 'avatar' => $cacheList['avatar']
+                    'id' => $cacheList['id'], 'nickname' => $cacheList['nickname'], 'avatar' => $cacheList['avatar'],
+                    'vip' => 0
                 ];
+
+                if (isset($cacheList['vip'])) {
+                    $this->jsonResponse['data']['vip'] = $cacheList['vip'];
+                }
 
                 //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {

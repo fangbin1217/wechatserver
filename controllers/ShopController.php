@@ -116,7 +116,7 @@ class ShopController extends Controller
         $queryShop = $Shops->queryShop($params);
         if ($queryShop) {
             $this->jsonResponse['code'] = 0;
-            $this->jsonResponse['msg'] = 0;
+            $this->jsonResponse['msg'] = '';
             $this->jsonResponse['data'] = $queryShop;
         }
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
