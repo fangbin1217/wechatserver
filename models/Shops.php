@@ -231,7 +231,7 @@ class Shops  extends \yii\db\ActiveRecord
 
 
         $labelsList = [];
-        $labels = labels::find()->where(['is_good'=>1])->asArray()->all();
+        $labels = Labels::find()->where(['is_good'=>1])->asArray()->all();
         if ($labels) {
 
             foreach ($labels as &$val) {
