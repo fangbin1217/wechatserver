@@ -107,7 +107,7 @@ class Shops  extends \yii\db\ActiveRecord
             return false;
         }
 
-        $labels = labels::find()->where(['is_good'=>1])->asArray()->all();
+        $labels = Labels::find()->where(['is_good'=>1])->asArray()->all();
         if (!$labels) {
             Shops::$error_msg = '无好评标签！';
             return false;
