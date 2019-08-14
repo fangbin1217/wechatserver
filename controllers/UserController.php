@@ -33,7 +33,7 @@ class UserController extends Controller
                 $this->jsonResponse['msg'] = 'get userinfo success';
                 $this->jsonResponse['data'] = [
                     'uid' => $cacheList['id'], 'nickname' => $cacheList['nickname'], 'avatar' => $cacheList['avatar'],
-                    'vip' => 0, 'DATE' => date('Y-m-d H:i:s')
+                    'vip' => 0, 'DATE' => YII_ENV.date('Y-m-d H:i:s')
                 ];
 
                 if (isset($cacheList['vip'])) {
