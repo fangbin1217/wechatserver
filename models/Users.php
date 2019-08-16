@@ -531,6 +531,7 @@ class Users  extends \yii\db\ActiveRecord
 
     //查询进行中用户头像的数据
     public function queryStartingUsers($user_id) {
+
         $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
         $room_id = 0;
         if (!$my) {
@@ -544,6 +545,7 @@ class Users  extends \yii\db\ActiveRecord
             Users::$error_msg = '该用户所在房间不是准备中或进行中';
             return false;
         }
+
         $our = RoomUsers::find()->select(
             [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname', Users::tableName().'.avatar', Users::tableName().'.vip'])
             ->joinWith('user')
@@ -568,7 +570,7 @@ class Users  extends \yii\db\ActiveRecord
                     $val['nickname'] = mb_substr($val['nickname'], 0, Yii::$app->params['MAX_NICKNAME']);
                 }
                 $res[] = [
-                    'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'], 'vip'=> (int) $val['vip'],
+                    'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'], 'vip'=> (int) $val['vip'], 'colorClass' => Users::getColorClass($val['user_id'], $val['vip']),
                     'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
                 ];
             }
@@ -714,8 +716,84 @@ class Users  extends \yii\db\ActiveRecord
         return '';
     }
 
+    static public function getUserClass($user_id) {
+        $cache = Yii::$app->redis->get('USERCLASS#'.$user_id);
+        if ($cache) {
+            return $cache;
+        }
+    }
 
 
+    static public function saveVip($cacheList, $access_token) {
+        try {
+            $trans = Yii::$app->getDb()->beginTransaction();
+            $date = date('Y-m-d H:i:s');
+            $users = Users::find()->where(['id'=>$cacheList['id']])->one();
+            $users->vip = 1;
+            $users->update_time = $date;
+            if (!$users->save()) {
+                return false;
+            }
 
+            $UserClass = new UserClass();
+            $UserClass->uid = $cacheList['id'];
+            $UserClass->color_class = 'sunshine';
+            $UserClass->update_time = $date;
+            if (!$UserClass->save()) {
+                return false;
+            }
+            $trans->commit();
+
+            $cacheList['vip'] = 1;
+            if ($users->expire_time >= time()) {
+                $expire_time = $users->expire_time - time();
+                Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
+                Yii::$app->redis->expire('T#'.$access_token, $expire_time);
+
+            }
+
+            return true;
+        } catch (Exception $E) {
+            $trans->rollBack();
+            Users::$error_msg = '保存失败';
+            return false;
+        }
+
+        return false;
+
+    }
+
+    static public function updClass($uid, $color_class) {
+
+        $color_class = trim($color_class);
+        if (!$color_class) {
+            return false;
+        }
+
+        $UserClass = UserClass::find()->where(['uid'=>$uid])->one();
+        if ($UserClass) {
+            $UserClass->color_class = $color_class;
+            $UserClass->update_time = date('Y-m-d H:i:s');
+            if ($UserClass->save()) {
+
+                Yii::$app->redis->set('AVATARCLASS#'.$uid, $color_class);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static public function getColorClass($uid, $vip = 0) {
+        if (!$uid) {
+            return '';
+        }
+        $getColorclass = UserClass::getColorclass($uid);
+        if (!$getColorclass) {
+            if ($vip) {
+                $getColorclass = 'sunshine';
+            }
+        }
+        return $getColorclass;
+    }
 
 }

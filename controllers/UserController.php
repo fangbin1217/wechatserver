@@ -33,14 +33,15 @@ class UserController extends Controller
                 $this->jsonResponse['msg'] = 'get userinfo success';
                 $this->jsonResponse['data'] = [
                     'uid' => $cacheList['id'], 'nickname' => $cacheList['nickname'], 'avatar' => $cacheList['avatar'],
-                    'vip' => 0, 'DATE' => YII_ENV.date('Y-m-d H:i:s')
+                    'vip' => 0, 'DATE' => YII_ENV.date('Y-m-d H:i:s'), 'colorClass' => ''
                 ];
 
                 if (isset($cacheList['vip'])) {
                     $this->jsonResponse['data']['vip'] = $cacheList['vip'];
                 }
 
-                //$this->jsonResponse['data']['vip'] = 1;
+                $getColorClass = Users::getColorClass($cacheList['id'], $this->jsonResponse['data']['vip']);
+                $this->jsonResponse['data']['colorClass'] = $getColorClass;
                 //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($cacheList['id'], $bind_uid, $cacheList['nickname']);
@@ -180,25 +181,37 @@ class UserController extends Controller
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
-                $date = date('Y-m-d H:i:s');
                 $cacheList = json_decode($cache, true);
-                $users = Users::find()->where(['id'=>$cacheList['id']])->one();
-                $users->vip = 1;
-                $users->update_time = $date;
-                if ($users->save()) {
-                    $cacheList['vip'] = 1;
-                    if ($users->expire_time >= time()) {
-                        $expire_time = $users->expire_time - time();
-                        Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
-                        Yii::$app->redis->expire('T#'.$access_token, $expire_time);
-                        $this->jsonResponse['code'] = 0;
-                        $this->jsonResponse['msg'] = 'success';
-                    }
+                $isSave = Users::saveVip($cacheList, $access_token);
+                if ($isSave) {
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = 'success';
                 }
             }
         }
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
+
+    public function actionUpdclass() {
+        $params = json_decode(file_get_contents('php://input'),true);
+        $access_token = $params['access_token'] ?? '';
+        $color_class = $params['color_class'] ?? '';
+        $this->jsonResponse['msg'] = '更新失败！';
+        if ($access_token) {
+            $cache = Yii::$app->redis->get('T#' . $access_token);
+            if ($cache) {
+                $cacheList = json_decode($cache, true);
+                $isSave = Users::updClass($cacheList['id'], $color_class);
+                if ($isSave) {
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = 'success';
+                }
+            }
+        }
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
+
+
 
 
 }

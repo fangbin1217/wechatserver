@@ -123,7 +123,8 @@ class LoginController extends Controller
                 $this->jsonResponse['data'] = [
                     'access_token' => $access_token,
                     'uid' => $users->id,
-                    'vip' => 0
+                    'vip' => 0,
+                    'colorClass' => ''
                 ];
 
                 $cacheList = Users::getUserInfo($users->id);
@@ -174,9 +175,12 @@ class LoginController extends Controller
                 $this->jsonResponse['data'] = [
                     'access_token' => $access_token,
                     'uid' => $users->id,
-                    'vip' => $users->vip
+                    'vip' => $users->vip,
+                    'colorClass' => ''
                 ];
 
+                $getColorClass = Users::getColorClass($users->id, $users->vip);
+                $this->jsonResponse['data']['colorClass'] = $getColorClass;
                 $cacheList = Users::getUserInfo($usersInfo['id']);
                 Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                 Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
