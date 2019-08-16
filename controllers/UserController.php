@@ -201,7 +201,8 @@ class UserController extends Controller
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
-                $isSave = Users::updClass($cacheList['id'], $color_class);
+                $vip = isset($cacheList['vip']) ?? 0;
+                $isSave = Users::updClass($cacheList['id'], $color_class, $vip);
                 if ($isSave) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'success';

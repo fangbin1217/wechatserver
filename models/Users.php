@@ -763,7 +763,7 @@ class Users  extends \yii\db\ActiveRecord
 
     }
 
-    static public function updClass($uid, $color_class) {
+    static public function updClass($uid, $color_class, $vip = 0) {
 
         $color_class = trim($color_class);
         if (!$color_class) {
@@ -775,9 +775,19 @@ class Users  extends \yii\db\ActiveRecord
             $UserClass->color_class = $color_class;
             $UserClass->update_time = date('Y-m-d H:i:s');
             if ($UserClass->save()) {
-
                 Yii::$app->redis->set('AVATARCLASS#'.$uid, $color_class);
                 return true;
+            }
+        } else {
+            if ($vip) {
+                $UserClass = new UserClass();
+                $UserClass->uid = $uid;
+                $UserClass->color_class = $color_class;
+                $UserClass->update_time = date('Y-m-d H:i:s');
+                if ($UserClass->save()) {
+                    Yii::$app->redis->set('AVATARCLASS#'.$uid, $color_class);
+                    return true;
+                }
             }
         }
         return false;
