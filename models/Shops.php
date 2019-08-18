@@ -32,7 +32,7 @@ class Shops  extends \yii\db\ActiveRecord
             $Rooms->andWhere(['like', 'name', $shop_name]);
         }
 
-        $list = [];
+        $result = ['page'=> (int) $page, 'list'=>[], 'count'=>0];
         $res = $Rooms->orderBy(['sorts'=>SORT_DESC])->offset(($page - 1) * Yii::$app->params['page_size'])->limit(Yii::$app->params['page_size'])->asArray()->all();
         if ($res) {
             $shop_ids = array_column($res, 'id');
@@ -71,9 +71,11 @@ class Shops  extends \yii\db\ActiveRecord
             }
 
             //print_r($list);exit;
-            return ['page'=>$page, 'list'=>$list];
+            $result['list'] = $list;
+            $result['count'] = (int) count($list);
+            return $result;
         }
-        return $list;
+        return $result;
     }
 
     public static function saveComment($params) {
