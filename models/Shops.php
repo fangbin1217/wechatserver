@@ -23,10 +23,10 @@ class Shops  extends \yii\db\ActiveRecord
         $Rooms = Shops::find()->where(['is_del'=>0]);
 
         if ($province_name) {
-            $Rooms->andWhere(['province_name' => $province_name]);
+            //$Rooms->andWhere(['province_name' => $province_name]);
         }
         if ($city_name) {
-            $Rooms->andWhere(['city_name' => $city_name]);
+            //$Rooms->andWhere(['city_name' => $city_name]);
         }
         if ($shop_name) {
             $Rooms->andWhere(['like', 'name', $shop_name]);
