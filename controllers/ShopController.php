@@ -40,7 +40,6 @@ class ShopController extends Controller
                 $city_name = $p['city_name'];
             }
         }
-
         if (!$city_name) {
             $this->jsonResponse['code'] = -1;
             $this->jsonResponse['msg'] = '定位获取失败';

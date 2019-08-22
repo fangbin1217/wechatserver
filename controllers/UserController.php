@@ -212,6 +212,36 @@ class UserController extends Controller
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
 
+    public function actionBind() {
+        $this->jsonResponse['msg'] = '添加玩家失败';
+        $this->jsonResponse['data']['isFull'] = 0;
+        $params = json_decode(file_get_contents('php://input'),true);
+        $access_token = $params['access_token'] ?? '';
+        $nickname = $params['nickname'] ?? '';
+        $nickname = trim($nickname);
+        if ($access_token) {
+            $cache = Yii::$app->redis->get('T#' . $access_token);
+            if ($cache) {
+                $cacheList = json_decode($cache, true);
+                $isSave = Users::bindedRoom(0, $cacheList['id'], $nickname, true);
+                $this->jsonResponse['data']['isFull'] = Users::$isFull;
+                if ($isSave) {
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = '添加玩家成功';
+                } else {
+                    if ($this->jsonResponse['data']['isFull'] == 1) {
+                        $this->jsonResponse['msg'] = '最多支持4人';
+                    }
+
+                    $this->jsonResponse['msg'] = Users::$error_msg;
+                }
+
+
+            }
+        }
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
+
 
 
 

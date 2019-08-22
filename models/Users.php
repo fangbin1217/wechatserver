@@ -6,9 +6,9 @@ use Yii;
 class Users  extends \yii\db\ActiveRecord
 {
 
-    static $error_msg = '';
+    static public $error_msg = '';
 
-
+    static public $isFull = 0;
 
     /**
      * {@inheritdoc}
@@ -172,7 +172,36 @@ class Users  extends \yii\db\ActiveRecord
 
     }
 
-    static public function bindedRoom($cur_user_id, $binded_user_id = 0, $nickname = '') {
+
+    static public function bindedRoom($cur_user_id, $binded_user_id = 0, $nickname = '', $isSd = false) {
+        if ($isSd) {
+            //查找最新房间数据
+            $roomSd = Rooms::find()->where(['user_id'=>$binded_user_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
+            if (!$roomSd) {
+                $cur_user_id = 12;
+            } else {
+                $roomSdCount = RoomUsers::find()->where(['room_id'=>$roomSd['id'], 'is_del'=>0])->count();
+                if ($roomSdCount == 3) {
+                    $cur_user_id = 13;
+                } elseif ($roomSdCount == 4) {
+                    $cur_user_id = 14;
+                    Users::$isFull = 1;
+                } else {
+                    if ($roomSdCount == 5) {
+                        Users::$error_msg = '人数已满';
+                        Users::$isFull = 1;
+                    }
+                    return false;
+                }
+            }
+
+            if (!$nickname) {
+                $nickname = Users::getNickname($cur_user_id);
+            }
+        }
+
+
+
         if (!$binded_user_id) {
             Users::$error_msg = '被绑定用户ID不存在';
             return false;
@@ -547,7 +576,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $our = RoomUsers::find()->select(
-            [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname', Users::tableName().'.avatar', Users::tableName().'.vip'])
+            [RoomUsers::tableName(). '.user_id', RoomUsers::tableName().'.nickname',  Users::tableName().'.avatar', Users::tableName().'.vip'])
             ->joinWith('user')
             ->where([RoomUsers::tableName(). '.room_id'=>$room_id, RoomUsers::tableName().'.is_del'=>0])
             ->orderBy([RoomUsers::tableName().'.sorts'=>SORT_ASC])
@@ -624,7 +653,7 @@ class Users  extends \yii\db\ActiveRecord
                     'user_id'=>$val['user_id'],'score'=>$val['score'], 'color'=>$mycolor
                 ];
             }
-            $scores = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['times'=>SORT_ASC])->asArray()->all();
+            $scores = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['times'=>SORT_DESC])->asArray()->all();
             if ($scores) {
 
 
@@ -644,12 +673,17 @@ class Users  extends \yii\db\ActiveRecord
                 }
             }
         }
-
         if ($tmp) {
-            foreach ($tmp as &$vv) {
+            $tmp2 = [];
+            foreach ($tmp as $key=>&$vv) {
                 $vv = Users::arrSort($vv, 'sorts', 'asc');
+                $tmp2[] = [
+                    'times'=>$key,
+                    'list' => $vv
+                ];
             }
-            return ['xiaoji'=>$tmp, 'total'=>$total];
+            return ['xiaoji'=>$tmp2, 'total'=>$total];
+            // return ['xiaoji'=>$tmp, 'total'=>$total];
         }
         return false;
 
