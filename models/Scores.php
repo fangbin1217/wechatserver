@@ -57,7 +57,7 @@ class Scores  extends \yii\db\ActiveRecord
                     ];
                 }
             }
-            $scores = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['times'=>SORT_ASC])->asArray()->all();
+            $scores = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['times'=>SORT_DESC])->asArray()->all();
             if ($scores) {
 
                 foreach ($scores as $score) {
@@ -112,7 +112,12 @@ class Scores  extends \yii\db\ActiveRecord
                 }
             }
             if ($tmp) {
-                $result = ['score' => $tmp, 'total' => $total];
+                $tmp2 = [];
+                foreach ($tmp as $key=>$vv) {
+                    $tmp2[] = ['times'=>$key, 'list'=>$vv];
+                }
+                $result = ['score' => $tmp2, 'total' => $total];
+                // $result = ['score' => $tmp, 'total' => $total];
             }
         }
         return $result;
