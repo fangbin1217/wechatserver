@@ -29,12 +29,13 @@ class ScoreController extends Controller
         $this->jsonResponse['msg'] = 'get lastrecord fail';
         $params = json_decode(file_get_contents('php://input'),true);
         $access_token = $params['access_token'] ?? '';
+        $version = $params['version'] ?? '';
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
 
-                $getLastRecord = (new Scores())->getLastRecord($cacheList['id']);
+                $getLastRecord = (new Scores())->getLastRecord($cacheList['id'], $version);
                 if ($getLastRecord) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get lastrecord success';

@@ -56,6 +56,7 @@ class UserController extends Controller
         $this->jsonResponse['msg'] = 'get startusers fail';
         $params = json_decode(file_get_contents('php://input'),true);
         $access_token = $params['access_token'] ?? '';
+        $version = $params['version'] ?? '';
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
@@ -69,7 +70,7 @@ class UserController extends Controller
                     $this->jsonResponse['isRoomOwner'] = Rooms::isRoomOwner($cacheList['id']);
                     $this->jsonResponse['xiaoji'] = [];
                     $this->jsonResponse['total'] = [];
-                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);
+                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id'], $version);
                     if ($queryStartingScore) {
                         $this->jsonResponse['xiaoji'] = $queryStartingScore['xiaoji'];
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
@@ -106,7 +107,7 @@ class UserController extends Controller
     //保存得分(小计)
     public function actionSavescore() {
         $params = json_decode(file_get_contents('php://input'),true);
-
+        $version = $params['version'] ?? '';
         $startUsers = $params['startUsers'] ?? [];
         $isSave = Users::saveScore($startUsers);
         if ($isSave) {
@@ -123,7 +124,7 @@ class UserController extends Controller
                     $cacheList = json_decode($cache, true);
                     $queryStarting = (new Users())->queryStartingUsers($cacheList['id']);
                     $this->jsonResponse['data'] = $queryStarting;
-                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);
+                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id'], $version);
                     if ($queryStartingScore) {
                         $this->jsonResponse['xiaoji'] = $queryStartingScore['xiaoji'];
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
@@ -142,7 +143,7 @@ class UserController extends Controller
     public function actionSavetotalscore() {
 
         $params = json_decode(file_get_contents('php://input'),true);
-
+        $version = $params['version'] ?? '';
         $startUsers = $params['startUsers'] ?? [];
         $isSave = Users::saveScore($startUsers, true);
         if ($isSave) {
@@ -159,7 +160,7 @@ class UserController extends Controller
                     $cacheList = json_decode($cache, true);
                     $queryStarting = (new Users())->queryStartingUsers($cacheList['id']);
                     $this->jsonResponse['data'] = $queryStarting;
-                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id']);
+                    $queryStartingScore = (new Users())->queryStartingScore($cacheList['id'], $version);
                     if ($queryStartingScore) {
                         $this->jsonResponse['xiaoji'] = $queryStartingScore['xiaoji'];
                         $this->jsonResponse['total'] = $queryStartingScore['total'];

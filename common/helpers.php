@@ -12,3 +12,14 @@ if (! function_exists('foo')) {
         echo 'foo';
     }
 }
+
+if (! function_exists('vesionInt')) {
+
+    function vesionInt($version = '') {
+        if ($version) {
+            $version = str_replace('.', '', $version);
+            return (int) $version;
+        }
+        return 0;
+    }
+}

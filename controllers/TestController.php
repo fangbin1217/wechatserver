@@ -18,6 +18,10 @@ class TestController extends Controller
 
     public function actionTest() {
 
+        $a = '1.9.0';
+        $b = '1.9.0';
+        echo vesionInt($a);
+        var_dump($a === $b);
 
     }
 

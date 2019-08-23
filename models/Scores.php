@@ -18,7 +18,7 @@ class Scores  extends \yii\db\ActiveRecord
     }
 
     //最近的已结束记录
-    public function getLastRecord($user_id) {
+    public function getLastRecord($user_id, $version = '') {
         $result = [];
         $room_id = 0;
         //最近2次记录
@@ -116,8 +116,12 @@ class Scores  extends \yii\db\ActiveRecord
                 foreach ($tmp as $key=>$vv) {
                     $tmp2[] = ['times'=>$key, 'list'=>$vv];
                 }
-                $result = ['score' => $tmp2, 'total' => $total];
-                // $result = ['score' => $tmp, 'total' => $total];
+                if (vesionInt($version) >= 190) {
+                    $result = ['score' => $tmp2, 'total' => $total];
+                } else {
+                    $result = ['score' => $tmp, 'total' => $total];
+                }
+
             }
         }
         return $result;

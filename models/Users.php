@@ -611,7 +611,7 @@ class Users  extends \yii\db\ActiveRecord
     }
 
     //查询正在比赛的得分
-    public function queryStartingScore($user_id) {
+    public function queryStartingScore($user_id, $version = '') {
         $my = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
         $room_id = 0;
         if (!$my) {
@@ -682,8 +682,12 @@ class Users  extends \yii\db\ActiveRecord
                     'list' => $vv
                 ];
             }
-            return ['xiaoji'=>$tmp2, 'total'=>$total];
-            // return ['xiaoji'=>$tmp, 'total'=>$total];
+            if (vesionInt($version) >= 190) {
+                return ['xiaoji'=>$tmp2, 'total'=>$total];
+            } else {
+                return ['xiaoji'=>$tmp, 'total'=>$total];
+            }
+
         }
         return false;
 
@@ -726,6 +730,9 @@ class Users  extends \yii\db\ActiveRecord
         $cache = Yii::$app->redis->get('NICKNAME#'.$user_id);
         if ($cache) {
             return $cache;
+        }
+        if (!$user_id) {
+            return '';
         }
         $Users = Users::find()->select(['nickname'])->where(['id'=>$user_id])->asArray()->one();
         if ($Users) {
