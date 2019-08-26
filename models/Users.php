@@ -213,15 +213,17 @@ class Users  extends \yii\db\ActiveRecord
             return false;
         }
 
-        //判断当前用户是否处于已准备或进行中
-        $myAll = RoomUsers::find()->where(['user_id'=>$cur_user_id, 'is_del'=>0])->asArray()->all();
-        if ($myAll) {
-            $myIds = array_column($myAll, 'room_id');
-            if ($myIds) {
-                $all_rooms = Rooms::find()->where(['is_del' => 0])->andWhere(['in', 'id', $myIds])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->all();
-                if ($all_rooms) {
-                    Users::$error_msg = '当前用户已绑定';
-                    return false;
+        if (!in_array($cur_user_id, [12,13,14])) {
+            //判断当前用户是否处于已准备或进行中
+            $myAll = RoomUsers::find()->where(['user_id' => $cur_user_id, 'is_del' => 0])->asArray()->all();
+            if ($myAll) {
+                $myIds = array_column($myAll, 'room_id');
+                if ($myIds) {
+                    $all_rooms = Rooms::find()->where(['is_del' => 0])->andWhere(['in', 'id', $myIds])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->all();
+                    if ($all_rooms) {
+                        Users::$error_msg = '当前用户已绑定';
+                        return false;
+                    }
                 }
             }
         }
