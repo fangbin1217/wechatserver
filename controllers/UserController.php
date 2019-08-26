@@ -234,7 +234,7 @@ class UserController extends Controller
                         $this->jsonResponse['msg'] = '最多支持4人';
                     }
 
-                    //$this->jsonResponse['msg'] = Users::$error_msg;
+                    $this->jsonResponse['msg'] = Users::$error_msg;
                 }
 
 
