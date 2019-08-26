@@ -343,6 +343,40 @@ class Users  extends \yii\db\ActiveRecord
             $totalScore = 0;
 
             $isEveryZero = 0;
+
+
+            $onlyUser = 0;
+            foreach ($params as $val) {
+                if(!isset($val['user_id']) || !isset($val['score']) || !isset($val['zf_index'])) {
+                    Users::$error_msg = '入参格式不合法';
+                    return false;
+                }
+                if (!in_array($val['user_id'], [0, 12, 13, 14])) {
+                    $onlyUser = $val['user_id'];
+                    break;
+                }
+            }
+
+            if (!$onlyUser) {
+                Users::$error_msg = '真实用户不存在';
+                return false;
+            }
+
+            $my = RoomUsers::find()->where(['user_id'=>$onlyUser, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+            if ($my) {
+                $room_id = $my['room_id'];
+                $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
+                if (!$Rooms) {
+                    Users::$error_msg = '房间状态已结束';
+                    return false;
+                }
+            }
+
+            if (!$room_id) {
+                Users::$error_msg = '房间不存在';
+                return false;
+            }
+
             foreach ($params as $val) {
                 if(!isset($val['user_id']) || !isset($val['score']) || !isset($val['zf_index'])) {
                     Users::$error_msg = '入参格式不合法';
@@ -358,19 +392,7 @@ class Users  extends \yii\db\ActiveRecord
                     $val['score'] = -$val['score'];
                 }
                 $totalScore += $val['score'];
-                if ($i == 0) {
-                    $my = RoomUsers::find()->where(['user_id'=>$val['user_id'], 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
-                    if ($my) {
-                        $room_id = $my['room_id'];
 
-                        $Rooms = Rooms::find()->where(['id'=>$room_id, 'is_del'=>0])->andWhere(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->asArray()->one();
-                        if (!$Rooms) {
-                            Users::$error_msg = '房间状态已结束';
-                            return false;
-                        }
-
-                    }
-                }
 
                 $maxScore = Scores::find()->where(['room_id'=>$room_id, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
                 if ($maxScore) {
