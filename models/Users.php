@@ -362,6 +362,7 @@ class Users  extends \yii\db\ActiveRecord
                 return false;
             }
 
+            $room_id = 0;
             $my = RoomUsers::find()->where(['user_id'=>$onlyUser, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
             if ($my) {
                 $room_id = $my['room_id'];
