@@ -226,6 +226,7 @@ class UserController extends Controller
                 $cacheList = json_decode($cache, true);
                 $isSave = Users::bindedRoom(0, $cacheList['id'], $nickname, true);
                 $this->jsonResponse['data']['isFull'] = Users::$isFull;
+                $this->jsonResponse['data']['playerName'] = Users::$playerName;
                 if ($isSave) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = '添加玩家成功';

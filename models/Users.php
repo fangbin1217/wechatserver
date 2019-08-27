@@ -10,6 +10,8 @@ class Users  extends \yii\db\ActiveRecord
 
     static public $isFull = 0;
 
+    static public $playerName = '';
+
     /**
      * {@inheritdoc}
      */
@@ -199,6 +201,7 @@ class Users  extends \yii\db\ActiveRecord
                 $nickname = Users::getNickname($cur_user_id);
             }
         }
+        Users::$playerName = $nickname;
 
 
 
