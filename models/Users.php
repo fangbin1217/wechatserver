@@ -350,7 +350,7 @@ class Users  extends \yii\db\ActiveRecord
 
             $onlyUser = 0;
             foreach ($params as $val) {
-                if(!isset($val['user_id']) || !isset($val['score']) || !isset($val['zf_index'])) {
+                if(!isset($val['user_id'])) {
                     Users::$error_msg = '入参格式不合法';
                     return false;
                 }
@@ -382,7 +382,8 @@ class Users  extends \yii\db\ActiveRecord
             }
 
             foreach ($params as $val) {
-                if(!isset($val['user_id']) || !isset($val['score']) || !isset($val['zf_index'])) {
+                $val['score'] = $val['score'] ?? 0;
+                if(!isset($val['user_id']) || !isset($val['zf_index'])) {
                     Users::$error_msg = '入参格式不合法';
                     return false;
                 }
