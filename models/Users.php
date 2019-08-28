@@ -605,7 +605,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $our = RoomUsers::find()->select(
-            [RoomUsers::tableName(). '.user_id', Users::tableName().'.nickname',  Users::tableName().'.avatar', Users::tableName().'.vip'])
+            [RoomUsers::tableName(). '.user_id', RoomUsers::tableName().'.nickname',  Users::tableName().'.avatar', Users::tableName().'.vip'])
             ->joinWith('user')
             ->where([RoomUsers::tableName(). '.room_id'=>$room_id, RoomUsers::tableName().'.is_del'=>0])
             ->orderBy([RoomUsers::tableName().'.sorts'=>SORT_ASC])
