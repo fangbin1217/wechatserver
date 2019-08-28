@@ -18,14 +18,17 @@ class TestController extends Controller
 {
 
     public function actionTest() {
+        $cache = Yii::$app->redis->get('T#CDCFF5C5C00430367BEFE5CDABCB5498');
+        if ($cache) {
+            $cacheList = json_decode($cache, true);
+            $RoomUsers = RoomUsers::find()->where(['id'=>258])->one();
+            $RoomUsers->nickname = $cacheList['nickname'];
+            $RoomUsers->update_time = date('Y-m-d H:i:s');
+            $RoomUsers->save();
 
-        $RoomUsers = RoomUsers::find()->where(['id'=>258])->one();
+        }
 
-        $name = Users::getNickname(1738);
 
-        $RoomUsers->nickname = $name;
-        $RoomUsers->update_time = date('Y-m-d H:i:s');
-        $RoomUsers->save();
         $a = '2.0.0';
         $b = '1.9.0';
         echo vesionInt($a);
