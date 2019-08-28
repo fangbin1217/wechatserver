@@ -18,6 +18,7 @@ class TestController extends Controller
 {
 
     public function actionTest() {
+        /*
         $cache = Yii::$app->redis->get('T#CDCFF5C5C00430367BEFE5CDABCB5498');
         if ($cache) {
             $cacheList = json_decode($cache, true);
@@ -27,6 +28,7 @@ class TestController extends Controller
             $RoomUsers->save();
 
         }
+        */
 
 
         $a = '2.0.0';
