@@ -194,4 +194,10 @@ class LoginController extends Controller
 
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
+
+    public function actionError()
+    {
+        return '404';
+        exit;
+    }
 }
