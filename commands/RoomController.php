@@ -52,15 +52,17 @@ class RoomController extends Controller
 
         if ($len == 0) {
             $datas = Users::find()->where(['is_del'=>0, 'local_avatar'=>''])->asArray()->all();
+            $aaa = false;
             if ($datas) {
                 foreach ($datas as $val) {
                     if ($val['avatar'] !== Yii::$app->params['image_default']) {
                         Yii::$app->redis->lpush('Q#AVATAR', $val['id']);
+                        $aaa = true;
                     }
                 }
             }
 
-            if (!$datas) {
+            if (!$aaa) {
                 echo " no data \n";
                 return ExitCode::OK;
             }
