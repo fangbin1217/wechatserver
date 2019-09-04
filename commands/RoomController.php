@@ -45,13 +45,12 @@ class RoomController extends Controller
 
     public function actionImage($message = 'test') {
         $len = Yii::$app->redis->llen('Q#AVATAR');
-        $max = 10;
+        $max = 20;
         if ($len < $max) {
             $max = $len;
         }
-        Yii::$app->redis->del('Q#AVATAR');
-        //echo $len;exit;
-        if ($len == 0 || true) {
+
+        if ($len == 0) {
             $datas = Users::find()->where(['is_del'=>0, 'local_avatar'=>''])->asArray()->all();
             if ($datas) {
                 foreach ($datas as $val) {
@@ -60,11 +59,12 @@ class RoomController extends Controller
                     }
                 }
             }
+
+            if (!$datas) {
+                echo " no data \n";
+                return ExitCode::OK;
+            }
         }
-
-        echo Yii::$app->redis->llen('Q#AVATAR');
-
-        exit;
 
         $success = 0;
         for ($i=0;$i<$max;$i++) {
