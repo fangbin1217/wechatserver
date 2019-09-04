@@ -49,13 +49,20 @@ class RoomController extends Controller
         if ($len < $max) {
             $max = $len;
         }
-
-        echo $len;exit;
-        if ($len == 0) {
+        Yii::$app->redis->del('Q#AVATAR');
+        //echo $len;exit;
+        if ($len == 0 || true) {
             $datas = Users::find()->where(['is_del'=>0, 'local_avatar'=>''])->asArray()->all();
-
-            echo count($datas);
+            if ($datas) {
+                foreach ($datas as $val) {
+                    if ($val['avatar'] !== Yii::$app->params['image_default']) {
+                        Yii::$app->redis->lpush('Q#AVATAR', $val['id']);
+                    }
+                }
+            }
         }
+
+        echo Yii::$app->redis->llen('Q#AVATAR');
 
         exit;
 
