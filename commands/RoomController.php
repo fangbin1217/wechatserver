@@ -50,6 +50,14 @@ class RoomController extends Controller
             $max = $len;
         }
 
+        if ($len == 0) {
+            $datas = Users::find()->where(['is_del'=>0, 'local_avatar'=>''])->asArray()->all();
+
+            echo count($datas);
+        }
+
+        exit;
+
         $success = 0;
         for ($i=0;$i<$max;$i++) {
             $uid = Yii::$app->redis->rpop('Q#AVATAR');
