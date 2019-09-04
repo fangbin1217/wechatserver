@@ -50,6 +50,7 @@ class RoomController extends Controller
             $max = $len;
         }
 
+        echo $len;exit;
         if ($len == 0) {
             $datas = Users::find()->where(['is_del'=>0, 'local_avatar'=>''])->asArray()->all();
 
