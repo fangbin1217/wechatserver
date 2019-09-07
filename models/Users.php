@@ -52,6 +52,10 @@ class Users  extends \yii\db\ActiveRecord
         return  self::find()->where(['id'=>$uid, 'is_del'=> 0])->asArray()->one();
     }
 
+    static public function getUserInfo2($uid) {
+        return  self::find()->where(['id'=>$uid, 'is_del'=> 0])->one();
+    }
+
 
     static public function createXCX() {
         $cache = Yii::$app->redis->get('XCX');
@@ -605,7 +609,7 @@ class Users  extends \yii\db\ActiveRecord
         }
 
         $our = RoomUsers::find()->select(
-            [RoomUsers::tableName(). '.user_id', RoomUsers::tableName().'.nickname',  Users::tableName().'.avatar', Users::tableName().'.vip'])
+            [RoomUsers::tableName(). '.user_id', RoomUsers::tableName().'.nickname',  Users::tableName().'.avatar', Users::tableName().'.vip', Users::tableName().'.local_avatar'])
             ->joinWith('user')
             ->where([RoomUsers::tableName(). '.room_id'=>$room_id, RoomUsers::tableName().'.is_del'=>0])
             ->orderBy([RoomUsers::tableName().'.sorts'=>SORT_ASC])
@@ -629,7 +633,7 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'], 'vip'=> (int) $val['vip'], 'colorClass' => Users::getColorClass($val['user_id'], $val['vip']),
-                    'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian']
+                    'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian'], 'local_avatar'=> $val['local_avatar']
                 ];
             }
         }

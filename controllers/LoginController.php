@@ -13,6 +13,143 @@ use yii\filters\VerbFilter;
 class LoginController extends Controller
 {
 
+    public function actionIndex()
+    {
+        $this->jsonResponse['msg'] = 'login error';
+        $appid = Yii::$app->params['appid'];
+        $appsercet = Yii::$app->params['appsercet'];
+        $bind_uid = $params['bind_uid'] ?? '';
+        $params = json_decode(file_get_contents('php://input'),true);
+        $CODE = $params['CODE'] ?? '';
+        if (!$CODE) {
+            $this->jsonResponse['msg'] = 'CODE empty';
+            return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+        }
+        $URL2 = "https://api.weixin.qq.com/sns/jscode2session?appid=$appid&secret=$appsercet&js_code=$CODE&grant_type=authorization_code";
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $URL2);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 13);
+        $output = curl_exec($ch);
+        $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($codes == 200) {
+            $output = json_decode($output, true);
+            $session_key = $output['session_key'] ?? '';
+            $openid = $output['openid'] ?? '';
+            if (!$openid) {
+                $this->jsonResponse['msg'] = 'get openid empty';
+                return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+            }
+
+
+            $usersInfo = Users::getUserByOpenId($openid);
+            $time = time();
+            $date = date('Y-m-d H:i:s');
+            $expire_time = $time + Yii::$app->params['loginCacheTime'];
+            $username = uniqid();
+            $access_token = strtoupper(md5($openid.$session_key.rand(1,1000)));
+            if (!$usersInfo) {
+                $nickname = '未设置';
+                $avatar = Yii::$app->params['image_default'];
+
+                $users = new Users();
+                $users->nickname = $nickname;
+                $users->avatar = $avatar;
+                $users->openid = $openid;
+                $users->session_key = $session_key;
+                $users->access_token = $access_token;
+                $users->username = $username;
+                $users->expire_time = $expire_time;
+                $users->create_time = $date;
+                $users->update_time = $date;
+                $users->login_ip = Yii::$app->request->getUserIP();
+                $users->login_time = $date;
+
+                if ($users->save()) {
+                    $result['code'] = 0;
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = 'login save success';
+                    $this->jsonResponse['data'] = [
+                        'access_token' => $access_token,
+                        'openid' => $openid,
+                        'uid' => $users->id,
+                        'vip' => 0,
+                        'colorClass' => '',
+                        'nickName' => $nickname,
+                        'avatarUrl' => $avatar,
+                        'localAvatar' => $avatar,
+                        'isLogin' => false
+                    ];
+
+                    $cacheList = Users::getUserInfo($users->id);
+                    Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
+                    Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
+
+
+                    //如果是扫码进来 就绑定用户及房间
+                    if ($bind_uid) {
+                        $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
+                    }
+                }
+
+            } else {
+                $users = Users::find()->where(['id'=>$usersInfo['id']])->one();
+                $users->session_key = $session_key;
+                $users->access_token = $access_token;
+                $users->expire_time = $expire_time;
+                $users->update_time = $date;
+                $users->login_ip = Yii::$app->request->getUserIP();
+                $users->login_time = $date;
+
+
+                if ($users->save()) {
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = 'login upd success';
+
+
+                    $local_avatar = Yii::$app->params['image_default'];
+                    if ($users->local_avatar) {
+                        $local_avatar = $users->local_avatar;
+                    }
+                    $this->jsonResponse['data'] = [
+                        'access_token' => $access_token,
+                        'openid' => $openid,
+                        'uid' => $users->id,
+                        'vip' => $users->vip,
+                        'colorClass' => '',
+                        'nickName' => $users->nickname,
+                        'avatarUrl' => $users->avatar,
+                        'localAvatar' => $local_avatar,
+                        'isLogin' => false
+                    ];
+
+                    if ($users->avatar !== Yii::$app->params['image_default']) {
+                        $this->jsonResponse['data']['isLogin'] = true;
+                    }
+
+                    $getColorClass = Users::getColorClass($users->id, $users->vip);
+                    $this->jsonResponse['data']['colorClass'] = $getColorClass;
+                    $cacheList = Users::getUserInfo($usersInfo['id']);
+                    Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
+                    Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
+
+                    //如果是扫码进来 就绑定用户及房间
+                    if ($bind_uid) {
+                        $isSave = Users::bindedRoom($usersInfo['id'], $bind_uid, $usersInfo['nickname']);
+                    }
+                }
+            }
+
+
+        }
+
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
+
+
     /**
      * Displays homepage.
      *
@@ -136,9 +273,6 @@ class LoginController extends Controller
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
                 }
-
-                //生成本地图片放入队列
-                Yii::$app->redis->lpush('Q#AVATAR', $users->id);
             }
 
         } else {

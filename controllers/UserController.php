@@ -14,6 +14,72 @@ use app\models\Rooms;
 class UserController extends Controller
 {
 
+    public function actionUpdinfo()
+    {
+        $this->jsonResponse['msg'] = 'upd userinfo fail';
+        $params = json_decode(file_get_contents('php://input'),true);
+        $access_token = $params['access_token'] ?? '';
+        $nickname = $params['nickname'] ?? '';
+        $nickname = trim($nickname);
+        $avatar = $params['avatar'] ?? '';
+        $avatar = trim($avatar);
+        if (!$avatar) {
+            $this->jsonResponse['msg'] = 'avatar empty';
+            return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+        }
+        if (!$nickname) {
+            $nickname = uniqid();
+        }
+
+        $time = time();
+        $date = date('Y-m-d H:i:s');
+        $expire_time = $time + Yii::$app->params['loginCacheTime'];
+        if ($access_token) {
+            $cache = Yii::$app->redis->get('T#' . $access_token);
+            if ($cache) {
+                $cacheList = json_decode($cache, true);
+                $users = Users::find()->where(['id'=>$cacheList['id']])->one();
+                $users->nickname = $nickname;
+                $users->avatar = $avatar;
+                $users->expire_time = $expire_time;
+                $users->update_time = $date;
+
+                if ($users->save()) {
+                    $result['code'] = 0;
+                    $this->jsonResponse['code'] = 0;
+                    $this->jsonResponse['msg'] = 'upd userinfo success';
+
+                    $local_avatar = Yii::$app->params['image_default'];
+                    if ($users->local_avatar) {
+                        $local_avatar = $users->local_avatar;
+                    }
+
+                    $getColorClass = Users::getColorClass($cacheList['id'], $cacheList['vip']);
+
+                    $this->jsonResponse['data'] = [
+                        'uid' => $cacheList['id'],
+                        'nickName' => $nickname,
+                        'avatarUrl' => $avatar,
+                        'localAvatar' => $local_avatar,
+                        'vip' => $cacheList['vip'] ?? '',
+                        'colorClass' => $getColorClass,
+                        'isLogin' => true
+                    ];
+
+                    $cacheList = Users::getUserInfo($users->id);
+                    Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
+                    Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
+
+                }
+            }
+
+        }
+
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+
+
+    }
+
     /**
      * Displays homepage.
      *
@@ -28,20 +94,35 @@ class UserController extends Controller
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
+
+
                 $cacheList = json_decode($cache, true);
                 $this->jsonResponse['code'] = 0;
                 $this->jsonResponse['msg'] = 'get userinfo success';
+
+                $local_avatar = Yii::$app->params['image_default'];
+                if ($cacheList['local_avatar']) {
+                    $local_avatar = $cacheList['local_avatar'];
+                }
                 $this->jsonResponse['data'] = [
-                    'uid' => $cacheList['id'], 'nickname' => $cacheList['nickname'], 'avatar' => $cacheList['avatar'],
-                    'vip' => 0, 'DATE' => YII_ENV.date('Y-m-d H:i:s'), 'colorClass' => ''
+                    'uid' => $cacheList['id'],
+                    'nickName' => $cacheList['nickname'],
+                    'avatarUrl' => $cacheList['avatar'],
+                    'vip' => $cacheList['vip'] ?? '',
+                    'colorClass' => '',
+                    'localAvatar' => $local_avatar,
+                    'isLogin' => false
                 ];
 
-                if (isset($cacheList['vip'])) {
-                    $this->jsonResponse['data']['vip'] = $cacheList['vip'];
+                if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
+                    $this->jsonResponse['data']['isLogin'] = true;
                 }
+
 
                 $getColorClass = Users::getColorClass($cacheList['id'], $this->jsonResponse['data']['vip']);
                 $this->jsonResponse['data']['colorClass'] = $getColorClass;
+
+
                 //如果是扫码进来 就绑定用户及房间
                 if ($bind_uid) {
                     $isSave = Users::bindedRoom($cacheList['id'], $bind_uid, $cacheList['nickname']);

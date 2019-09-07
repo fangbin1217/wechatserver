@@ -55,7 +55,7 @@ class RoomController extends Controller
             $aaa = false;
             if ($datas) {
                 foreach ($datas as $val) {
-                    if ($val['avatar'] !== Yii::$app->params['image_default']) {
+                    if ($val['avatar'] && ($val['avatar'] !== Yii::$app->params['image_default'])) {
                         Yii::$app->redis->lpush('Q#AVATAR', $val['id']);
                         $aaa = true;
                     }
