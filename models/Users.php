@@ -633,7 +633,7 @@ class Users  extends \yii\db\ActiveRecord
                 }
                 $res[] = [
                     'user_id' => $val['user_id'],'nickname' => $val['nickname'],'avatar' => $val['avatar'], 'vip'=> (int) $val['vip'], 'colorClass' => Users::getColorClass($val['user_id'], $val['vip']),
-                    'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian'], 'local_avatar'=> $val['local_avatar']
+                    'zf_index'=>0, 'color'=> Yii::$app->params['red'], 'score'=>'', 'is_ready'=>0, 'is_last'=>0, 'jiajian_image'=> Yii::$app->params['image_jiajian'], 'local_avatar'=> Yii::$app->params['serverHost'].$val['local_avatar']
                 ];
             }
         }

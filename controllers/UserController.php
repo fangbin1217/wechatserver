@@ -51,7 +51,7 @@ class UserController extends Controller
 
                     $local_avatar = Yii::$app->params['image_default'];
                     if ($users->local_avatar) {
-                        $local_avatar = $users->local_avatar;
+                        $local_avatar = Yii::$app->params['serverHost'].$users->local_avatar;
                     }
 
                     $getColorClass = Users::getColorClass($cacheList['id'], $cacheList['vip']);
@@ -61,10 +61,16 @@ class UserController extends Controller
                         'nickName' => $nickname,
                         'avatarUrl' => $avatar,
                         'localAvatar' => $local_avatar,
-                        'vip' => $cacheList['vip'] ?? '',
+                        'vip' => false,
                         'colorClass' => $getColorClass,
-                        'isLogin' => true
+                        'isLogin' => true,
+                        'box' => getRandData(true)
                     ];
+
+                    $vip = $cacheList['vip'] ?? '';
+                    if ($vip) {
+                        $this->jsonResponse['data']['vip'] = true;
+                    }
 
                     $cacheList = Users::getUserInfo($users->id);
                     Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
@@ -102,17 +108,23 @@ class UserController extends Controller
 
                 $local_avatar = Yii::$app->params['image_default'];
                 if ($cacheList['local_avatar']) {
-                    $local_avatar = $cacheList['local_avatar'];
+                    $local_avatar = Yii::$app->params['serverHost'].$cacheList['local_avatar'];
                 }
                 $this->jsonResponse['data'] = [
                     'uid' => $cacheList['id'],
                     'nickName' => $cacheList['nickname'],
                     'avatarUrl' => $cacheList['avatar'],
-                    'vip' => $cacheList['vip'] ?? '',
+                    'vip' => false,
                     'colorClass' => '',
                     'localAvatar' => $local_avatar,
-                    'isLogin' => false
+                    'isLogin' => false,
+                    'box' => getRandData(true)
                 ];
+
+                $vip = $cacheList['vip'] ?? '';
+                if ($vip) {
+                    $this->jsonResponse['data']['vip'] = true;
+                }
 
                 if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
                     $this->jsonResponse['data']['isLogin'] = true;

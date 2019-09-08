@@ -76,12 +76,13 @@ class LoginController extends Controller
                         'access_token' => $access_token,
                         'openid' => $openid,
                         'uid' => $users->id,
-                        'vip' => 0,
+                        'vip' => false,
                         'colorClass' => '',
                         'nickName' => $nickname,
                         'avatarUrl' => $avatar,
                         'localAvatar' => $avatar,
-                        'isLogin' => false
+                        'isLogin' => false,
+                        'box' => getRandData(true)
                     ];
 
                     $cacheList = Users::getUserInfo($users->id);
@@ -118,13 +119,18 @@ class LoginController extends Controller
                         'access_token' => $access_token,
                         'openid' => $openid,
                         'uid' => $users->id,
-                        'vip' => $users->vip,
+                        'vip' => false,
                         'colorClass' => '',
                         'nickName' => $users->nickname,
                         'avatarUrl' => $users->avatar,
                         'localAvatar' => $local_avatar,
-                        'isLogin' => false
+                        'isLogin' => false,
+                        'box' => getRandData(true)
                     ];
+
+                    if ($users->vip) {
+                        $this->jsonResponse['data']['vip'] = true;
+                    }
 
                     if ($users->avatar !== Yii::$app->params['image_default']) {
                         $this->jsonResponse['data']['isLogin'] = true;

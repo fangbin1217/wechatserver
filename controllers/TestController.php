@@ -28,13 +28,18 @@ class TestController extends Controller
             $RoomUsers->save();
 
         }
-        */
+
 
 
         $a = '2.0.0';
         $b = '1.9.0';
         echo vesionInt($a);
         var_dump(vesionInt($a) >= vesionInt($b));
+
+        */
+
+
+        print_r(getRandData(false));
 
     }
 
