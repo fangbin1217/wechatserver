@@ -19,6 +19,10 @@ class Scores  extends \yii\db\ActiveRecord
 
     //最近的已结束记录
     public function getLastRecord($user_id, $version = '') {
+        $lastCache = Yii::$app->redis->get('LAST#' . $user_id);
+        if ($lastCache) {
+            return json_decode($lastCache, true);
+        }
         $result = [];
         $room_id = 0;
         //最近2次记录
@@ -124,6 +128,9 @@ class Scores  extends \yii\db\ActiveRecord
 
             }
         }
+
+        Yii::$app->redis->set('LAST#' . $user_id, json_encode($result, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('LAST#' . $user_id, 3600);
         return $result;
     }
 
@@ -131,6 +138,11 @@ class Scores  extends \yii\db\ActiveRecord
     public function getLastYearScore($user_id, $vip) {
         $res = [];
         $result = [];
+
+        $lastCache = Yii::$app->redis->get('LASTYEAR#' . $user_id);
+        if ($lastCache) {
+            return json_decode($lastCache, true);
+        }
 
         $room_ids = [];
         $Rooms = Rooms::find()->where(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->andWhere(['is_del'=>0])->asArray()->all();
@@ -211,11 +223,22 @@ class Scores  extends \yii\db\ActiveRecord
                 }
             }
         }
+
+        Yii::$app->redis->set('LASTYEAR#' . $user_id, json_encode($res, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('LASTYEAR#' . $user_id, 86400);
+
+
         return $res;
     }
 
     public function myResults($user_id) {
         $result = [];
+
+        $lastCache = Yii::$app->redis->get('RESULTS#' . $user_id);
+        if ($lastCache) {
+            return json_decode($lastCache, true);
+        }
+
         $RoomUsers = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->asArray()->all();
         if ($RoomUsers) {
 
@@ -260,6 +283,9 @@ class Scores  extends \yii\db\ActiveRecord
             }
 
         }
+
+        Yii::$app->redis->set('RESULTS#' . $user_id, json_encode($result, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('RESULTS#' . $user_id, 86400);
 
         return $result;
     }

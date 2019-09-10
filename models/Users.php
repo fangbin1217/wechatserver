@@ -394,6 +394,24 @@ class Users  extends \yii\db\ActiveRecord
 
                 $val['user_id'] = (int) $val['user_id'];
                 $val['score'] = (int) $val['score'];
+
+
+                $lastCache = Yii::$app->redis->get('LAST#' . $val['user_id']);
+                if ($lastCache) {
+                    Yii::$app->redis->del('LAST#' . $val['user_id']);
+                }
+
+                $lastCache2 = Yii::$app->redis->get('LASTYEAR#' . $val['user_id']);
+                if ($lastCache2) {
+                    Yii::$app->redis->del('LASTYEAR#' . $val['user_id']);
+                }
+
+                $lastCache3 = Yii::$app->redis->get('RESULTS#' . $val['user_id']);
+                if ($lastCache3) {
+                    Yii::$app->redis->del('RESULTS#' . $val['user_id']);
+                }
+
+
                 if (!$val['score']) {
                     $isEveryZero += 1;
                 }
