@@ -118,7 +118,9 @@ class UserController extends Controller
                     'colorClass' => '',
                     'localAvatar' => $local_avatar,
                     'isLogin' => false,
-                    'box' => getRandData(true)
+                    'box' => getRandData(true),
+                    'nickname' => $cacheList['nickname'],  //old
+                    'avatar' => $cacheList['avatar']  //old
                 ];
 
                 $vip = $cacheList['vip'] ?? '';
