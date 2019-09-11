@@ -733,11 +733,15 @@ class Users  extends \yii\db\ActiveRecord
                     'list' => $vv
                 ];
             }
+
+            /*
             if (vesionInt($version) >= 190) {
                 return ['xiaoji'=>$tmp2, 'total'=>$total];
             } else {
                 return ['xiaoji'=>$tmp, 'total'=>$total];
             }
+            */
+            return ['xiaoji'=>$tmp2, 'total'=>$total];
 
         }
         return false;

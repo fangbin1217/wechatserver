@@ -120,11 +120,15 @@ class Scores  extends \yii\db\ActiveRecord
                 foreach ($tmp as $key=>$vv) {
                     $tmp2[] = ['times'=>$key, 'list'=>$vv];
                 }
+
+                /*
                 if (vesionInt($version) >= 190) {
                     $result = ['score' => $tmp2, 'total' => $total];
                 } else {
                     $result = ['score' => $tmp, 'total' => $total];
                 }
+                */
+                $result = ['score' => $tmp2, 'total' => $total];
 
             }
         }
