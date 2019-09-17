@@ -133,8 +133,24 @@ class LoginController extends Controller
                     }
 
                     if ($users->avatar !== Yii::$app->params['image_default']) {
-                        $this->jsonResponse['data']['isLogin'] = true;
+
+                        $avatarUpdTime = $users->avatar_updtime;
+                        $avatarUpdTime = (int) $avatarUpdTime;
+                        if ($avatarUpdTime) {
+                            $be = time() - $avatarUpdTime;
+                            if ($be < 86400 * 30) {
+                                $this->jsonResponse['data']['isLogin'] = true;
+                            }
+
+                        }
                     }
+
+                    if (!$this->jsonResponse['data']['isLogin']) {
+                        $this->jsonResponse['data']['avatarUrl'] = Yii::$app->params['image_default'];
+                        $this->jsonResponse['data']['nickName'] = '未设置';
+                    }
+
+
 
                     $getColorClass = Users::getColorClass($users->id, $users->vip);
                     $this->jsonResponse['data']['colorClass'] = $getColorClass;
@@ -155,185 +171,6 @@ class LoginController extends Controller
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
     }
 
-
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
-    public function actionOpenid()
-    {
-
-        $this->jsonResponse['msg'] = 'get openid error';
-        $appid = Yii::$app->params['appid'];
-        $appsercet = Yii::$app->params['appsercet'];
-
-        $params = json_decode(file_get_contents('php://input'),true);
-        $CODE = $params['CODE'] ?? '';
-        if (!$CODE) {
-            $this->jsonResponse['msg'] = 'CODE empty';
-            return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-        }
-        $URL2 = "https://api.weixin.qq.com/sns/jscode2session?appid=$appid&secret=$appsercet&js_code=$CODE&grant_type=authorization_code";
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $URL2);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 13);
-        $output = curl_exec($ch);
-        $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($codes == 200) {
-            $output = json_decode($output, true);
-            $session_key = $output['session_key'] ?? '';
-            $openid = $output['openid'] ?? '';
-            if (!$openid) {
-                $this->jsonResponse['msg'] = 'get openid empty';
-                return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-            }
-            $this->jsonResponse['code'] = 0;
-            $this->jsonResponse['msg'] = 'get openid success';
-            $this->jsonResponse['data'] = [
-                'openid' => $openid,
-                'session_key' => $session_key
-            ];
-        }
-
-        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-    }
-
-    public function actionUpduserinfo()
-    {
-        $params = json_decode(file_get_contents('php://input'),true);
-        $openid = $params['openid'] ?? '';
-        $session_key = $params['session_key'] ?? '';
-        $nickname = $params['nickname'] ?? '';
-        $avatar = $params['avatar'] ?? '';
-        $bind_uid = $params['bind_uid'] ?? '';
-
-
-        $gender = $params['gender'] ?? 0;
-        $province = $params['province'] ?? '';
-        $city = $params['city'] ?? '';
-        $country = $params['country'] ?? '';
-
-        $this->jsonResponse['msg'] = 'do login error';
-
-        if (!$openid) {
-            $this->jsonResponse['msg'] = 'openid empty';
-            return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-        }
-
-
-
-        $usersInfo = Users::getUserByOpenId($openid);
-        $time = time();
-        $date = date('Y-m-d H:i:s');
-        $expire_time = $time + Yii::$app->params['loginCacheTime'];
-        $username = uniqid();
-        $access_token = strtoupper(md5($openid.$session_key.rand(1,1000)));
-        if (!$usersInfo) {
-            if (!$nickname) {
-                $nickname = '未设置';
-            }
-            if (!$avatar) {
-                $avatar = Yii::$app->params['image_default'];
-            }
-
-            $users = new Users();
-            $users->nickname = $nickname;
-            $users->avatar = $avatar;
-            $users->openid = $openid;
-            $users->session_key = $session_key;
-            $users->access_token = $access_token;
-            $users->username = $username;
-            $users->expire_time = $expire_time;
-            $users->create_time = $date;
-            $users->update_time = $date;
-            $users->login_ip = Yii::$app->request->getUserIP();
-            $users->login_time = $date;
-
-            $users->gender = $gender;
-            $users->province = $province;
-            $users->city = $city;
-            $users->country = $country;
-
-            if ($users->save()) {
-                $result['code'] = 0;
-                $this->jsonResponse['code'] = 0;
-                $this->jsonResponse['msg'] = 'login save success';
-                $this->jsonResponse['data'] = [
-                    'access_token' => $access_token,
-                    'uid' => $users->id,
-                    'vip' => 0,
-                    'colorClass' => ''
-                ];
-
-                $cacheList = Users::getUserInfo($users->id);
-                Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
-                Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
-
-
-                //如果是扫码进来 就绑定用户及房间
-                if ($bind_uid) {
-                    $isSave = Users::bindedRoom($users->id, $bind_uid, $nickname);
-                }
-            }
-
-        } else {
-            $users = Users::find()->where(['id'=>$usersInfo['id']])->one();
-            if ($nickname) {
-                $users->nickname = $nickname;
-            }
-            if ($avatar) {
-                $users->avatar = $avatar;
-            }
-            $users->session_key = $session_key;
-            $users->access_token = $access_token;
-            $users->expire_time = $expire_time;
-            $users->update_time = $date;
-            $users->login_ip = Yii::$app->request->getUserIP();
-            $users->login_time = $date;
-
-            if ($gender) {
-                $users->gender = $gender;
-            }
-            if ($province) {
-                $users->province = $province;
-            }
-            if ($city) {
-                $users->city = $city;
-            }
-            if ($country) {
-                $users->country = $country;
-            }
-
-            if ($users->save()) {
-                $this->jsonResponse['code'] = 0;
-                $this->jsonResponse['msg'] = 'login upd success';
-                $this->jsonResponse['data'] = [
-                    'access_token' => $access_token,
-                    'uid' => $users->id,
-                    'vip' => $users->vip,
-                    'colorClass' => ''
-                ];
-
-                $getColorClass = Users::getColorClass($users->id, $users->vip);
-                $this->jsonResponse['data']['colorClass'] = $getColorClass;
-                $cacheList = Users::getUserInfo($usersInfo['id']);
-                Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
-                Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
-
-                //如果是扫码进来 就绑定用户及房间
-                if ($bind_uid) {
-                    $isSave = Users::bindedRoom($usersInfo['id'], $bind_uid, $nickname);
-                }
-            }
-        }
-
-        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-    }
 
     public function actionError()
     {

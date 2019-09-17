@@ -43,8 +43,10 @@ class UserController extends Controller
                 $users->avatar = $avatar;
                 $users->expire_time = $expire_time;
                 $users->update_time = $date;
+                $users->avatar_updtime = $time;
 
                 if ($users->save()) {
+
                     $result['code'] = 0;
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'upd userinfo success';
@@ -119,8 +121,6 @@ class UserController extends Controller
                     'localAvatar' => $local_avatar,
                     'isLogin' => false,
                     'box' => getRandData(true),
-                    'nickname' => $cacheList['nickname'],  //old
-                    'avatar' => $cacheList['avatar']  //old
                 ];
 
                 $vip = $cacheList['vip'] ?? '';
@@ -129,7 +129,23 @@ class UserController extends Controller
                 }
 
                 if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
-                    $this->jsonResponse['data']['isLogin'] = true;
+
+                    $avatarUpdTime = $cacheList['avatar_updtime'] ?? '';
+                    $avatarUpdTime = (int) $avatarUpdTime;
+                    if ($avatarUpdTime) {
+                        $be = time() - $avatarUpdTime;
+                        if ($be < 86400 * 30) {
+                            $this->jsonResponse['data']['isLogin'] = true;
+                        }
+
+                    }
+
+                    if (!$this->jsonResponse['data']['isLogin']) {
+                        $this->jsonResponse['data']['avatarUrl'] = Yii::$app->params['image_default'];
+                        $this->jsonResponse['data']['nickName'] = '未设置';
+                    }
+
+
                 }
 
 
