@@ -194,6 +194,7 @@ class LoginController extends Controller
             $this->jsonResponse['city_id'] = $getCityData['city_id'];
             $this->jsonResponse['maxYear'] = Users::getLastYearZlPhb($getCityData['maxYear']);
             $this->jsonResponse['maxCity'] = Users::getLastYearMaxCity($getCityData['maxYear']);
+            $this->jsonResponse['isTg'] = false;
         }
         $this->jsonResponse['msg'] = 'no record';
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
