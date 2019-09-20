@@ -902,4 +902,174 @@ class Users  extends \yii\db\ActiveRecord
         return $getColorclass;
     }
 
+    static function getCityData($city_id) {
+
+        $cache = Yii::$app->redis->get('CITY_DATA#'.$city_id);
+        if ($cache) {
+            return json_decode($cache, true);
+        }
+
+        $res = [];
+
+        $citys = [];
+        $allcitys = City::find()->asArray()->all();
+        foreach ($allcitys as $key=>$val) {
+            $allcitys[$key]['color'] = '#888888';
+            if ($city_id == $val['id']) {
+                $citys[] = $val;
+                $allcitys[$key]['color'] = Yii::$app->params['green'];
+            }
+        }
+        //$citys = City::find()->where(['in', 'id', [$city_id]])->asArray()->all();
+
+
+        $title = [];
+        $datas = [];
+
+        $max = 0;
+        $min = 0;
+        $maxYear = '';
+        if ($citys) {
+            foreach ($citys as $val) {
+                $CityData = CityData::find()->where(['city_id'=>$val['id']])->orderBy(['year'=>SORT_ASC])->asArray()->all();
+                if ($CityData) {
+                    if (!$title) {
+                        foreach ($CityData as $v) {
+                            $title[] = $v['year'];
+                        }
+                        $count = count($title);
+                        $maxYear = $title[$count-1];
+                    }
+                    $tmp = [];
+                    $tmp = [
+                        'name' => $val['city_name'],
+                        'data' => []
+                    ];
+
+                    $tmp2 = [];
+                    foreach ($CityData as $v) {
+                        $tmp2[$v['year']] = (float) $v['add_amount'];
+                        $add_amount = (int) $v['add_amount'];
+                        if ($add_amount > $max) {
+                            $max = $add_amount;
+                        }
+
+                        if ($add_amount < $min) {
+                            $min = $add_amount;
+                        }
+
+                    }
+
+                    ksort($tmp2);
+                    foreach ($tmp2 as $vv) {
+                        $tmp['data'][] = $vv;
+                    }
+                    $datas[] = $tmp;
+                }
+            }
+        }
+
+        if ($title && $datas) {
+            if ($max > 0) {
+                $max = $max + 2;
+            }
+            if ($min < 0) {
+                $min = $min - 2;
+            }
+            $res = ['categories' => $title, 'series' => $datas, 'max'=> $max, 'min'=>$min, 'maxYear'=>$maxYear, 'citys'=>$allcitys, 'city_id'=>$city_id];
+        }
+        Yii::$app->redis->set('CITY_DATA#'.$city_id, json_encode($res, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('CITY_DATA#'.$city_id, 86400*10);
+        return $res;
+    }
+
+    static function getLastYearZlPhb($maxYear) {
+
+        $cache = Yii::$app->redis->get('CITY_YEAR#'.$maxYear);
+        if ($cache) {
+            return json_decode($cache, true);
+        }
+
+        $res = [];
+        $title = [];
+        $datas = [];
+
+        $max = 0;
+        $min = 0;
+        $max2 = 0;
+        $min2 = 0;
+        $CityData = CityData::find()->where(['year'=>$maxYear])->orderBy(['add_amount'=>SORT_DESC])->limit(10)->asArray()->all();
+
+        if ($CityData) {
+
+            $datas = [];
+            $datas2 = [];
+
+            foreach ($CityData as $v) {
+                $title[] = $v['city_name'];
+
+                $datas[] = (float) $v['add_amount'];
+                $add_amount = (int) $v['add_amount'];
+                if ($add_amount > $max) {
+                    $max = $add_amount;
+                }
+
+                if ($add_amount < $min) {
+                    $min = $add_amount;
+                }
+
+                $datas2[] = [
+                    'name' => $v['city_name'], 'data' => (float) $v['total_amount']
+                ];
+            }
+
+
+
+            if ($title && $datas) {
+                if ($max > 0) {
+                    $max = $max + 2;
+                }
+                if ($min < 0) {
+                    $min = $min - 2;
+                }
+                $res = [
+                    'categories' => $title, 'series' => $datas, 'max'=> $max, 'min'=>$min,
+                    'datas2' => $datas2
+                ];
+            }
+
+        }
+
+        Yii::$app->redis->set('CITY_YEAR#'.$maxYear, json_encode($res, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('CITY_YEAR#'.$maxYear, 86400*10);
+        return $res;
+    }
+
+    static function getLastYearMaxCity($maxYear) {
+
+        $cache = Yii::$app->redis->get('CITY_MAX#'.$maxYear);
+        if ($cache) {
+            return json_decode($cache, true);
+        }
+
+        $res = [];
+        $CityData = CityData::find()->where(['year'=>$maxYear])->orderBy(['total_amount'=>SORT_DESC])->limit(10)->asArray()->all();
+
+        if ($CityData) {
+
+            foreach ($CityData as $v) {
+
+                $res[] = [
+                    'name' => $v['city_name'].' '.$v['total_amount'].'（万）', 'data' => (float) $v['total_amount']
+                ];
+            }
+
+
+        }
+
+        Yii::$app->redis->set('CITY_MAX#'.$maxYear, json_encode($res, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('CITY_MAX#'.$maxYear, 86400*10);
+        return $res;
+    }
+
 }

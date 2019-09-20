@@ -177,4 +177,25 @@ class LoginController extends Controller
         return '404';
         exit;
     }
+
+    public function actionWxcharts()
+    {
+        $params = json_decode(file_get_contents('php://input'),true);
+        $city_id = $params['city_id'] ?? 5;
+        $getCityData = Users::getCityData($city_id);
+        if ($getCityData) {
+            $this->jsonResponse['code'] = 0;
+            $this->jsonResponse['categories'] = $getCityData['categories'];
+            $this->jsonResponse['series'] = $getCityData['series'];
+            $this->jsonResponse['max'] = $getCityData['max'];
+            $this->jsonResponse['min'] = $getCityData['min'];
+            $this->jsonResponse['year'] = $getCityData['maxYear'];
+            $this->jsonResponse['citys'] = $getCityData['citys'];
+            $this->jsonResponse['city_id'] = $getCityData['city_id'];
+            $this->jsonResponse['maxYear'] = Users::getLastYearZlPhb($getCityData['maxYear']);
+            $this->jsonResponse['maxCity'] = Users::getLastYearMaxCity($getCityData['maxYear']);
+        }
+        $this->jsonResponse['msg'] = 'no record';
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
 }
