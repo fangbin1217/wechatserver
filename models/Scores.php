@@ -139,6 +139,106 @@ class Scores  extends \yii\db\ActiveRecord
     }
 
     //获取历史统计记录汇总(近1年的)
+    public function getLastYearScore2($user_id, $vip) {
+        $res = [];
+        $result = [];
+
+        $lastCache = Yii::$app->redis->get('LASTYEAR2#' . $user_id);
+        if ($lastCache) {
+            //return json_decode($lastCache, true);
+        }
+
+        $room_ids = [];
+        $Rooms = Rooms::find()->where(['in', 'status', [Rooms::STATUS_IS_READY, Rooms::STATUS_BEGINING]])->andWhere(['is_del'=>0])->asArray()->all();
+        if ($Rooms) {
+            $room_ids = array_column($Rooms, 'id');
+        }
+
+        $time = date('Y-m-d H:i:s', strtotime('-1 years'));
+        if (!$room_ids) {
+            if ($vip) {
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->orderBy(['id' => SORT_ASC])->asArray()->all();
+            } else {
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->orderBy(['id' => SORT_ASC])->asArray()->all();
+            }
+        } else {
+            if ($vip) {
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['not in', 'room_id', $room_ids])->orderBy(['id' => SORT_ASC])->asArray()->all();
+            } else {
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->andWhere(['not in', 'room_id', SORT_ASC])->orderBy(['id' => SORT_DESC])->asArray()->all();
+            }
+        }
+        if ($RoomUsers) {
+            $room_ids = array_column($RoomUsers, 'room_id');
+
+            $max = 0;
+            $min = 0;
+            $title = [];
+            $value = [];
+
+            $nickName = Users::getNickname($user_id);
+            $curYear = date('Y');
+            foreach ($RoomUsers as $val) {
+                $year = date('Y', strtotime($val['create_time']));
+                if ($year == $curYear) {
+                    $date = date('m月d日', strtotime($val['create_time']));
+                    $tmp = date('Ymd', strtotime($val['create_time']));
+                    $strtotime = strtotime($tmp);
+                } else {
+                    $date = date('Ymd', strtotime($val['create_time']));
+                    $strtotime = strtotime($date);
+                }
+
+                $score = (int) $val['score'];
+                if (!isset($value[$strtotime])) {
+                    $title[$strtotime] = $date;
+                    $value[$strtotime] = $score;
+                } else {
+                    $value[$strtotime] += $score;
+                }
+
+                if ($value[$strtotime] > $max) {
+                    $max = $value[$strtotime];
+                }
+                if ($value[$strtotime] < $min) {
+                    $min = $value[$strtotime];
+                }
+            }
+
+            if ($max > 0) {
+                $max += 5;
+            }
+            if ($min < 0) {
+                $min -= 5;
+            }
+
+            $title2 = [];
+            ksort($title);
+            foreach ($title as $v1) {
+                $title2[] = $v1;
+            }
+            $value2 = [];
+            ksort($value);
+            foreach ($value as $vv) {
+                $value2[] = $vv;
+            }
+
+            $res = [
+                'title' => $title2, 'value' => $value2, 'max' => $max, 'min' => $min, 'nickName' => $nickName
+            ];
+        }
+
+
+
+        Yii::$app->redis->set('LASTYEAR2#' . $user_id, json_encode($res, JSON_UNESCAPED_UNICODE));
+        Yii::$app->redis->expire('LASTYEAR2#' . $user_id, 86400);
+
+
+        return $res;
+    }
+
+
+    //获取历史统计记录汇总(近1年的)
     public function getLastYearScore($user_id, $vip) {
         $res = [];
         $result = [];

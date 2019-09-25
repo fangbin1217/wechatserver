@@ -69,9 +69,11 @@ class UserController extends Controller
                         'box' => getRandData(true)
                     ];
 
-                    $vip = $cacheList['vip'] ?? '';
-                    if ($vip) {
-                        $this->jsonResponse['data']['vip'] = true;
+                    if ($this->jsonResponse['data']['isLogin']) {
+                        $vip = $cacheList['vip'] ?? '';
+                        if ($vip) {
+                            $this->jsonResponse['data']['vip'] = true;
+                        }
                     }
 
                     $cacheList = Users::getUserInfo($users->id);
@@ -123,10 +125,7 @@ class UserController extends Controller
                     'box' => getRandData(true),
                 ];
 
-                $vip = $cacheList['vip'] ?? '';
-                if ($vip) {
-                    $this->jsonResponse['data']['vip'] = true;
-                }
+
 
                 if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
 
@@ -134,7 +133,7 @@ class UserController extends Controller
                     $avatarUpdTime = (int) $avatarUpdTime;
                     if ($avatarUpdTime) {
                         $be = time() - $avatarUpdTime;
-                        if ($be < 86400 * 30) {
+                        if ($be < Yii::$app->params['loginCacheTime']) {
                             $this->jsonResponse['data']['isLogin'] = true;
                         }
 
@@ -146,6 +145,13 @@ class UserController extends Controller
                     }
 
 
+                }
+
+                if ($this->jsonResponse['data']['isLogin']) {
+                    $vip = $cacheList['vip'] ?? '';
+                    if ($vip) {
+                        $this->jsonResponse['data']['vip'] = true;
+                    }
                 }
 
 

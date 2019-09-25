@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\RoomUsers;
+use app\models\Scores;
 use app\models\Users;
 use Yii;
 use yii\filters\AccessControl;
@@ -39,7 +40,12 @@ class TestController extends Controller
         */
 
 
-        print_r(getRandData(false));
+        //$Scores = (new Scores())->getLastYearScore2(2, true);
+
+        //$this->jsonResponse['code'] = 0;
+        //$this->jsonResponse['data'] = $Scores;
+        //return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+        //print_r($Scores);
 
     }
 

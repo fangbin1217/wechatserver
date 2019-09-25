@@ -128,9 +128,7 @@ class LoginController extends Controller
                         'box' => getRandData(true)
                     ];
 
-                    if ($users->vip) {
-                        $this->jsonResponse['data']['vip'] = true;
-                    }
+
 
                     if ($users->avatar !== Yii::$app->params['image_default']) {
 
@@ -138,10 +136,16 @@ class LoginController extends Controller
                         $avatarUpdTime = (int) $avatarUpdTime;
                         if ($avatarUpdTime) {
                             $be = time() - $avatarUpdTime;
-                            if ($be < 86400 * 30) {
+                            if ($be < Yii::$app->params['loginCacheTime']) {
                                 $this->jsonResponse['data']['isLogin'] = true;
                             }
 
+                        }
+                    }
+
+                    if ($this->jsonResponse['data']['isLogin']) {
+                        if ($users->vip) {
+                            $this->jsonResponse['data']['vip'] = true;
                         }
                     }
 
@@ -195,6 +199,10 @@ class LoginController extends Controller
             $this->jsonResponse['maxYear'] = Users::getLastYearZlPhb($getCityData['maxYear']);
             $this->jsonResponse['maxCity'] = Users::getLastYearMaxCity($getCityData['maxYear']);
             $this->jsonResponse['isTg'] = true;
+
+            $this->jsonResponse['tg'] = [
+                ['appId' => 'wx547bae972d6fecf9', 'path'=>'pages/index/index?from=1', 'img'=>Yii::$app->params['serverHost'].'images/tg1.png'],
+            ];
         }
         $this->jsonResponse['msg'] = 'no record';
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
