@@ -145,7 +145,7 @@ class Scores  extends \yii\db\ActiveRecord
 
         $lastCache = Yii::$app->redis->get('LASTYEAR2#' . $user_id);
         if ($lastCache) {
-            //return json_decode($lastCache, true);
+            return json_decode($lastCache, true);
         }
 
         $room_ids = [];
