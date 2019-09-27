@@ -9,7 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\Users;
 use app\models\Rooms;
-
+use app\models\RoomUsers;
 
 class UserController extends Controller
 {
@@ -76,9 +76,18 @@ class UserController extends Controller
                         }
                     }
 
-                    $cacheList = Users::getUserInfo($users->id);
+                    $cacheList = Users::getUserInfo($cacheList['id']);
                     Yii::$app->redis->set('T#'.$access_token, json_encode($cacheList, JSON_UNESCAPED_UNICODE));
                     Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
+
+
+                    $RoomUsers = RoomUsers::find()->where(['user_id'=>$cacheList['id'], 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+                    if ($RoomUsers) {
+                       $RoomUsers2 = RoomUsers::find()->where(['id'=>$RoomUsers['id'], 'is_del'=>0])->one();
+                        $RoomUsers2->nickname = $nickname;
+                        $RoomUsers2->update_time = $date;
+                        $RoomUsers2->save();
+                    }
 
                 }
             }

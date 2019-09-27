@@ -47,6 +47,16 @@ class TestController extends Controller
         //return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
         //print_r($Scores);
 
+        /*
+        $RoomUsers = RoomUsers::find()->where(['user_id'=>1009, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
+        if ($RoomUsers) {
+            $RoomUsers2 = RoomUsers::find()->where(['id'=>$RoomUsers['id'], 'is_del'=>0])->one();
+            $RoomUsers2->nickname = '冰火2';
+            $RoomUsers2->update_time = date('Y-m-d H:i:s');
+            $RoomUsers2->save();
+        }
+        */
+
     }
 
 
