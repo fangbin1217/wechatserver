@@ -81,6 +81,13 @@ class UserController extends Controller
                     Yii::$app->redis->expire('T#'.$access_token, Yii::$app->params['loginCacheTime']);
 
 
+                    Yii::$app->redis->set('AVATAR#'.$cacheList['id'], $avatar);
+                    Yii::$app->redis->expire('AVATAR#'.$cacheList['id'], Yii::$app->params['wechat_avatar']);
+
+                    Yii::$app->redis->set('NICKNAME#'.$cacheList['id'], $nickname);
+                    Yii::$app->redis->expire('NICKNAME#'.$cacheList['id'], Yii::$app->params['wechat_nickname']);
+
+
                     $RoomUsers = RoomUsers::find()->where(['user_id'=>$cacheList['id'], 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
                     if ($RoomUsers) {
                        $RoomUsers2 = RoomUsers::find()->where(['id'=>$RoomUsers['id'], 'is_del'=>0])->one();
