@@ -18,9 +18,10 @@ class LoginController extends Controller
         $this->jsonResponse['msg'] = 'login error';
         $appid = Yii::$app->params['appid'];
         $appsercet = Yii::$app->params['appsercet'];
-        $bind_uid = $params['bind_uid'] ?? '';
+
         $params = json_decode(file_get_contents('php://input'),true);
         $CODE = $params['CODE'] ?? '';
+        $bind_uid = $params['bind_uid'] ?? '';
         if (!$CODE) {
             $this->jsonResponse['msg'] = 'CODE empty';
             return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
