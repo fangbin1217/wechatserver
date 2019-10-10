@@ -44,6 +44,10 @@ if (! function_exists('getRandData')) {
 
     function getRandData($check = true) {
         $check = false;
+        $hour = date('G');
+        if ($hour > 7 && $hour < 19) {
+            $check = true;
+        }
         $boxClass = ['out-front img-out', 'out-back img-out', 'out-left img-out', 'out-right img-out', 'out-top img-out', 'out-bottom img-out'];
         if ($check) {
             $data = [
