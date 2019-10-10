@@ -85,7 +85,9 @@ class RoomController extends Controller
                         "data" => ["keyword1"=>["value"=>'有人超越了你的最高记录，快来看看吧'], "keyword2"=>["value"=>$date]],
                         "emphasis_keyword" => "keyword1.DATA"
                     );
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+
+
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
                     $output = curl_exec($ch);
                     $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
