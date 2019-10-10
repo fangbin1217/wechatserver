@@ -87,7 +87,7 @@ class RoomController extends Controller
                     );
 
 
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data, JSON_UNESCAPED_UNICODE));
                     $output = curl_exec($ch);
                     $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
