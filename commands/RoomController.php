@@ -82,8 +82,8 @@ class RoomController extends Controller
                         "template_id" => $templateId,
                         "page" => $page,
                         "form_id" => $key,
-                        "data" => ["keyword1"=>["value"=>'有人超越了你的最高记录，快来看看吧'], "keyword2"=>["value"=>$date]],
-                        "emphasis_keyword" => "keyword1.DATA"
+                        "data" => ["keyword1"=>["value"=>'有人超越您的最佳记录，快来看看吧'], "keyword2"=>["value"=>$date]],
+                        //"emphasis_keyword" => "keyword1.DATA"
                     );
 
 
