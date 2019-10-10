@@ -57,7 +57,7 @@ class RoomController extends Controller
                 $json = Yii::$app->redis->rpop('FORM_ID');
                 $tmp = json_decode($json, true);
                 if ($time < $tmp['expireTime']) {
-                    $res[$tmp['formId']] = $tmp['openId'];
+                    $res[$tmp['openId']] = $tmp['formId'];
                 }
             }
 
@@ -78,10 +78,10 @@ class RoomController extends Controller
                     //设置post数据
                     $post_data = array(
                         "access_token" => $accessToken,
-                        "touser" => $val,
+                        "touser" => $key,
                         "template_id" => $templateId,
                         "page" => $page,
-                        "form_id" => $key,
+                        "form_id" => $val,
                         "data" => ["keyword1"=>["value"=>'有人超越您的最佳记录，快来看看吧'], "keyword2"=>["value"=>$date]],
                         //"emphasis_keyword" => "keyword1.DATA"
                     );
