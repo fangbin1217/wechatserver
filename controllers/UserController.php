@@ -31,6 +31,8 @@ class UserController extends Controller
             $nickname = uniqid();
         }
 
+        //$formId = $params['formId'] ?? '';
+
         $time = time();
         $date = date('Y-m-d H:i:s');
         $expire_time = $time + Yii::$app->params['loginCacheTime'];
@@ -97,6 +99,9 @@ class UserController extends Controller
                     }
 
                 }
+
+                //$openId = $cacheList['openid'] ?? '';
+                //Users::collectFormId($formId, $openId);
             }
 
         }
@@ -242,6 +247,8 @@ class UserController extends Controller
         $params = json_decode(file_get_contents('php://input'),true);
         $version = $params['version'] ?? '';
         $startUsers = $params['startUsers'] ?? [];
+        //$formId = $params['formId'] ?? '';
+
         $isSave = Users::saveScore($startUsers);
         if ($isSave) {
             $this->jsonResponse['code'] = 0;
@@ -263,11 +270,16 @@ class UserController extends Controller
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
                         $this->jsonResponse['userCount'] = count($queryStarting);
                     }
+
+                    //$openId = $cacheList['openid'] ?? '';
+                    //Users::collectFormId($formId, $openId);
                 }
             }
         } else {
             $this->jsonResponse['msg'] = Users::$error_msg;
         }
+
+
         return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
 
     }
@@ -278,6 +290,8 @@ class UserController extends Controller
         $params = json_decode(file_get_contents('php://input'),true);
         $version = $params['version'] ?? '';
         $startUsers = $params['startUsers'] ?? [];
+        //$formId = $params['formId'] ?? '';
+
         $isSave = Users::saveScore($startUsers, true);
         if ($isSave) {
             $this->jsonResponse['code'] = 0;
@@ -299,6 +313,9 @@ class UserController extends Controller
                         $this->jsonResponse['total'] = $queryStartingScore['total'];
                         $this->jsonResponse['userCount'] = count($queryStarting);
                     }
+
+                    //$openId = $cacheList['openid'] ?? '';
+                    //Users::collectFormId($formId, $openId);
                 }
             }
         } else {
@@ -311,6 +328,7 @@ class UserController extends Controller
     public function actionVip() {
         $params = json_decode(file_get_contents('php://input'),true);
         $access_token = $params['access_token'] ?? '';
+
         $this->jsonResponse['msg'] = '升级失败！';
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
@@ -330,6 +348,7 @@ class UserController extends Controller
         $params = json_decode(file_get_contents('php://input'),true);
         $access_token = $params['access_token'] ?? '';
         $color_class = $params['color_class'] ?? '';
+
         $this->jsonResponse['msg'] = '更新失败！';
         if ($access_token) {
             $cache = Yii::$app->redis->get('T#' . $access_token);
@@ -378,6 +397,25 @@ class UserController extends Controller
     }
 
 
+    public function actionCollect() {
+        $params = json_decode(file_get_contents('php://input'),true);
+        $access_token = $params['access_token'] ?? '';
+        $formId = $params['formId'] ?? '';
+
+        $this->jsonResponse['msg'] = '采集失败！';
+        if ($access_token) {
+            $cache = Yii::$app->redis->get('T#' . $access_token);
+            if ($cache) {
+                $cacheList = json_decode($cache, true);
+                $openId = $cacheList['openid'] ?? '';
+                Users::collectFormId($formId, $openId);
+                $this->jsonResponse['code'] = 0;
+                $this->jsonResponse['msg'] = '采集成功！';
+                $this->jsonResponse['data'] = ['formId'=>$formId];
+            }
+        }
+        return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
+    }
 
 
 }

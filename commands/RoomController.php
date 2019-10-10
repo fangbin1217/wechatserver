@@ -43,6 +43,67 @@ class RoomController extends Controller
         return ExitCode::OK;
     }
 
+    public function actionPushmsg($message = 'test') {
+        set_time_limit(0);
+        $templateId = 'ud0Ws6ss1ZMXTGymwizcqwDswWYQ9wUg11LR0B11TH8';
+        $page = 'pages/index/index';
+        $len = (int) Yii::$app->redis->llen('FORM_ID');
+        $success = 0;
+        if ($len) {
+
+            $time = time();
+            $res = [];
+            for ($i=0;$i<$len;$i++) {
+                $json = Yii::$app->redis->rpop('FORM_ID');
+                $tmp = json_decode($json, true);
+                if ($time < $tmp['expireTime']) {
+                    $res[$tmp['formId']] = $tmp['openId'];
+                }
+            }
+
+            $date = date('Y年m月d日');
+            if ($res) {
+                $accessToken = Users::createXCX();
+                $url = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token='.$accessToken;
+                foreach ($res as $key=>$val) {
+
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 13);
+                    //设置post方式提交
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    //设置post数据
+                    $post_data = array(
+                        "access_token" => $accessToken,
+                        "touser" => $val,
+                        "template_id" => $templateId,
+                        "page" => $page,
+                        "form_id" => $key,
+                        "data" => ["keyword1"=>["value"=>'有人超越了你的最高记录，快来看看吧'], "keyword2"=>["value"=>$date]],
+                        "emphasis_keyword" => "keyword1.DATA"
+                    );
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+                    $output = curl_exec($ch);
+                    $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    if ($codes == 200) {
+                        echo " $output \n";
+                        $success++;
+                    }
+                    sleep(1);
+
+                }
+            }
+        }
+
+        echo " total:$len success:$success \n";
+        return ExitCode::OK;
+
+    }
+
     public function actionImage($message = 'test') {
         $len = Yii::$app->redis->llen('Q#AVATAR');
         $max = 20;

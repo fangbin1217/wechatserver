@@ -1077,4 +1077,19 @@ class Users  extends \yii\db\ActiveRecord
         return $res;
     }
 
+    public static function collectFormId($formId, $openId) {
+
+        if ($formId && $openId) {
+            $expireTime = time() + 86400 * 7;
+            $datas = [
+                'formId' => $formId,
+                'openId' => $openId,
+                'expireTime' => $expireTime
+            ];
+
+            $json = json_encode($datas, JSON_UNESCAPED_UNICODE);
+            Yii::$app->redis->lpush('FORM_ID', $json);
+        }
+    }
+
 }
