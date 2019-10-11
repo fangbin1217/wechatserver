@@ -65,6 +65,18 @@ class RoomController extends Controller
             if ($res) {
                 $accessToken = Users::createXCX();
                 $url = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token='.$accessToken;
+
+
+                $randList = [
+                    '有人超越您的最佳记录，快来看看吧',
+                    '客官很久没来光顾了，快来看看吧',
+                    'VIP限时免费领，看来看看吧'
+                ];
+
+                $maxRand = count($randList) - 1;
+                $randKey = rand(0, $maxRand);
+                $randVal = $randList[$randKey];
+
                 foreach ($res as $key=>$val) {
 
                     $ch = curl_init();
@@ -82,7 +94,7 @@ class RoomController extends Controller
                         "template_id" => $templateId,
                         "page" => $page,
                         "form_id" => $val,
-                        "data" => ["keyword1"=>["value"=>'有人超越您的最佳记录，快来看看吧'], "keyword2"=>["value"=>$date]],
+                        "data" => ["keyword1"=>["value"=>$randVal], "keyword2"=>["value"=>$date]],
                         //"emphasis_keyword" => "keyword1.DATA"
                     );
 
