@@ -31,60 +31,31 @@ if (! function_exists('getAnimal')) {
             $year = date('Y');
         }
         $animals = [
-            'shu.png','niu.png','hu.png','tu.png','long.png','she.png',
-            'ma.png','yang.png','hou.png','ji.png','gou.png','zhu.png'
+            'shu.png','niu.png','hu.png','tu.png','long.png','she.png'
             ];
 
-        $k = ($year - 1900) % 12;
-        return $animals[$k];
+        return $animals[0];
     }
 }
 
 if (! function_exists('getRandData')) {
 
     function getRandData($check = true) {
-        $check = false;
-        $hour = date('G');
-        if ($hour > 7 && $hour < 19) {
-            $check = true;
-        }
+
         $boxClass = ['out-front img-out', 'out-back img-out', 'out-left img-out', 'out-right img-out', 'out-top img-out', 'out-bottom img-out'];
-        if ($check) {
-            $data = [
-                'shu.png','niu.png','hu.png','tu.png','long.png','she.png',
-                'ma.png','yang.png','hou.png','ji.png','gou.png','zhu.png'
+        $data = [
+            'shu.png', 'niu.png', 'hu.png', 'tu.png', 'long.png', 'she.png'
+        ];
+        $datas = [];
+        $i = 0;
+        foreach ($data as $val) {
+            $datas[] = [
+                'boxClass' => $boxClass[$i],
+                'boxImg' =>  '../../images/'.$val
             ];
-
-            $datas = [];
-            $randKeys = array_rand($data, 6);
-
-            $i = 0;
-            foreach ($data as $key=>$val) {
-                if (in_array($key, $randKeys)) {
-                    $datas[] = [
-                        'boxClass' => $boxClass[$i],
-                        'boxImg' =>  '../../images/'.$val
-                    ];
-
-                    $i++;
-                }
-            }
-            return $datas;
-        } else {
-            $data = [
-                'caishen.png', 'money5.jpg', 'money10.jpg', 'money20.jpg', 'money50.jpg', 'money100.jpg'
-            ];
-            $datas = [];
-            $i = 0;
-            foreach ($data as $val) {
-                $datas[] = [
-                    'boxClass' => $boxClass[$i],
-                    'boxImg' =>  '../../images/'.$val
-                ];
-                $i++;
-            }
-            return $datas;
+            $i++;
         }
+        return $datas;
 
 
     }
