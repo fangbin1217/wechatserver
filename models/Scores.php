@@ -89,11 +89,14 @@ class Scores  extends \yii\db\ActiveRecord
                     }
                     foreach ($total as &$to) {
                         $to['first_or_second'] = '';
+                        $to['style'] = '';
                         if (isset($uid_times[$to['user_id']])) {
                             if ($uid_times[$to['user_id']] == 1) {
                                 $to['first_or_second'] = Yii::$app->params['image_no1'];
+                                $to['style'] = 'gold';
                             } elseif ($uid_times[$to['user_id']] == 2) {
                                 $to['first_or_second'] = Yii::$app->params['image_no2'];
+                                $to['style'] = 'silvery';
                             }
                         }
 
