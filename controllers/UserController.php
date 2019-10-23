@@ -68,7 +68,8 @@ class UserController extends Controller
                         'vip' => false,
                         'colorClass' => $getColorClass,
                         'isLogin' => true,
-                        'box' => getRandData(true)
+                        'box' => getRandData(true),
+                        'isChecked' => Yii::$app->params['isChecked']
                     ];
 
                     if ($this->jsonResponse['data']['isLogin']) {
