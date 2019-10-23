@@ -144,6 +144,7 @@ class UserController extends Controller
                     'localAvatar' => $local_avatar,
                     'isLogin' => false,
                     'box' => getRandData(true),
+                    'isChecked' => Yii::$app->params['isChecked']
                 ];
 
 
