@@ -30,7 +30,7 @@ $commonParams = [
     'image_danwei' => '../../images/danwei.png',
     'shop_image' => 'images/shops/default.pngtrue',
     'shop_default_img' => 'shops00.png',
-    'isChecked' => true
+    'isChecked' => false
 ];
 
 if (YII_ENV == 'dev') {
