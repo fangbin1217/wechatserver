@@ -381,15 +381,15 @@ class UserController extends Controller
                 $isSave = Users::bindedRoom(0, $cacheList['id'], $nickname, true);
                 $this->jsonResponse['data']['isFull'] = Users::$isFull;
                 $this->jsonResponse['data']['playerName'] = Users::$playerName;
+                $this->jsonResponse['data']['playerAvatar'] = Users::$playerAvatar;
                 if ($isSave) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = '添加玩家成功';
                 } else {
                     if ($this->jsonResponse['data']['isFull'] == 1) {
-                        $this->jsonResponse['msg'] = '最多支持4人';
+                        $this->jsonResponse['msg'] = '人数已满！';
                     }
 
-                    //$this->jsonResponse['msg'] = Users::$error_msg;
                 }
 
 

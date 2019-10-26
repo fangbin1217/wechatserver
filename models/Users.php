@@ -12,6 +12,8 @@ class Users  extends \yii\db\ActiveRecord
 
     static public $playerName = '';
 
+    static public $playerAvatar = '';
+
     /**
      * {@inheritdoc}
      */
@@ -206,6 +208,9 @@ class Users  extends \yii\db\ActiveRecord
             }
         }
         Users::$playerName = $nickname;
+        if (in_array($cur_user_id, [12,13,14])) {
+            Users::$playerAvatar = Users::getAvatar($cur_user_id);
+        }
 
 
 
