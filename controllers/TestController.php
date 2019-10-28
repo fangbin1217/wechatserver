@@ -19,45 +19,90 @@ class TestController extends Controller
 {
 
     public function actionTest() {
+        //Yii::$app->redis->del('myLock2');exit;
+        $a = Users::find()->where(['id'=>1738])->asArray()->one();
+        $b = $a['nickname'];
+        print_r($b);exit;
         /*
-        $cache = Yii::$app->redis->get('T#CDCFF5C5C00430367BEFE5CDABCB5498');
-        if ($cache) {
-            $cacheList = json_decode($cache, true);
-            $RoomUsers = RoomUsers::find()->where(['id'=>258])->one();
-            $RoomUsers->nickname = $cacheList['nickname'];
-            $RoomUsers->update_time = date('Y-m-d H:i:s');
-            $RoomUsers->save();
-
+        $redis = Yii::$app->redis;
+        $llen = (int) $redis->llen('queue');
+        $queueList = [];
+        for ($i=0;$i<$llen;$i++) {
+            $orderJson = $redis->rpop('queue');
+            if ($orderJson) {
+                $tmp = @json_decode($orderJson, true);
+                if ($tmp) {
+                    $queueList[] = $tmp;
+                }
+            }
         }
 
+        $list = [];
 
-
-        $a = '2.0.0';
-        $b = '1.9.0';
-        echo vesionInt($a);
-        var_dump(vesionInt($a) >= vesionInt($b));
-
-        */
-
-
-        //$Scores = (new Scores())->getLastYearScore2(2, true);
-
-        //$this->jsonResponse['code'] = 0;
-        //$this->jsonResponse['data'] = $Scores;
-        //return json_encode($this->jsonResponse, JSON_UNESCAPED_UNICODE);
-        //print_r($Scores);
-
-        /*
-        $RoomUsers = RoomUsers::find()->where(['user_id'=>1009, 'is_del'=>0])->orderBy(['id'=>SORT_DESC])->asArray()->one();
-        if ($RoomUsers) {
-            $RoomUsers2 = RoomUsers::find()->where(['id'=>$RoomUsers['id'], 'is_del'=>0])->one();
-            $RoomUsers2->nickname = '冰火2';
-            $RoomUsers2->update_time = date('Y-m-d H:i:s');
-            $RoomUsers2->save();
+        $llen2 = (int) $redis->llen('queue2');
+        if ($llen2) {
+            for ($j = 0; $j < $llen2; $j++) {
+                $orderJson2 = $redis->rpop('queue2');
+                if ($orderJson2) {
+                    $tmp2 = @json_decode($orderJson2, true);
+                    if ($tmp2) {
+                        $list[$tmp2['userId']] = $tmp2;
+                    }
+                }
+            }
         }
-        */
 
+        foreach ($queueList as $val) {
+            if (isset($list[$val['userId']])) {
+                if ($val['t'] > 0 && $val['t'] < 100) {  //sub
+                    $list[$val['userId']]['amount'] = bcsub($list[$val['userId']]['amount'], bcadd($val['orderPrice'], $val['fee'], 2), 2);
+                    $list[$val['userId']]['outRemitNo'][] = $val['outRemitNo'];
+                } else if ($val['t'] >= 100) {  //add
+                    $list[$val['userId']]['amount'] = bcadd($list[$val['userId']]['amount'], $val['orderPrice'], 2);
+                    $list[$val['userId']]['outRemitNo'][] = $val['outRemitNo'];
+                }
+            } else {
+                if ($val['t'] > 0 && $val['t'] < 100) {  //sub
+                    $list[$val['userId']] = [
+                        'userId' => $val['userId'],
+                        'amount' => bcsub(0, bcadd($val['orderPrice'], $val['fee'], 2), 2),
+                        'outRemitNo' => [$val['outRemitNo']]
+                    ];
+                } else if ($val['t'] >= 100) {  //add
+                    $list[$val['userId']] = [
+                        'userId' => $val['userId'],
+                        'amount' => bcadd(0, $val['orderPrice'], 2),
+                        'outRemitNo' => [$val['outRemitNo']]
+                    ];
+                }
+            }
+        }
+
+        $listJson = [];
+        foreach ($list as $val) {
+            $listJson[] = json_encode($val, JSON_UNESCAPED_UNICODE);
+        }
+
+        $redis->lpush('queue2', ...$listJson);
+        */
     }
 
+    public function actionTest2() {
+        /*
+        echo "'".json_encode(['t' => 1, 'stype' => 1,'userId'=>237, 'fee'=> 1.8, 'orderPrice' => 513, 'outRemitNo' => '123456', 'order_num' => 'dd'], JSON_UNESCAPED_UNICODE)."'";
+
+        exit;
+        $a = [
+            json_encode(['t' => 1, 'stype' => 1,'userId'=>236, 'fee'=> 1.6, 'orderPrice' => 100, 'outRemitNo' => '123456', 'order_num' => 'EE'], JSON_UNESCAPED_UNICODE),
+            json_encode(['t' => 100, 'stype' => 2,'userId'=>236, 'fee'=> 1.5, 'orderPrice' => 101, 'outRemitNo' => '123457', 'order_num' => 'ff'], JSON_UNESCAPED_UNICODE),
+            json_encode(['t' => 1, 'stype' => 1,'userId'=>238, 'fee'=> 1.8, 'orderPrice' => 513, 'outRemitNo' => '123456', 'order_num' => 'dd'], JSON_UNESCAPED_UNICODE),
+            json_encode(['t' => 1, 'stype' => 1,'userId'=>237, 'fee'=> 1.8, 'orderPrice' => 513, 'outRemitNo' => '123456', 'order_num' => 'dd'], JSON_UNESCAPED_UNICODE),
+        ];
+
+        Yii::$app->redis->lpush('queue', ...$a);
+        */
+
+
+    }
 
 }
