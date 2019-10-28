@@ -20,8 +20,9 @@ class TestController extends Controller
 
     public function actionTest() {
         //Yii::$app->redis->del('myLock2');exit;
-        //$a = Users::find()->where(['id'=>1738])->asArray()->one();
-        //$b = $a['nickname'];
+        $a = Users::find()->where(['id'=>1738])->asArray()->one();
+        $b = $a['nickname'];
+        return json_encode(['code'=>0, 'msg'=>'ok', 'data'=>$b]);exit;
         //print_r($b);exit;
         /*
         $redis = Yii::$app->redis;
