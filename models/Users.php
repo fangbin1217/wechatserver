@@ -208,7 +208,7 @@ class Users  extends \yii\db\ActiveRecord
                 $accessToken = Users::createXCX();
 
                 $data_list = ['content'=> $nickname];
-                $data_string = json_encode($data_list);
+                $data_string = json_encode($data_list, JSON_UNESCAPED_UNICODE);
                 $url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token=$accessToken";
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $url);
@@ -224,12 +224,11 @@ class Users  extends \yii\db\ActiveRecord
 
                 $output = curl_exec($ch);
                 $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                echo $output;exit;
                 curl_close($ch);
                 if ($output) {
-                    $outputList = json_decode($output, true);
+                    $outputList = @json_decode($output, true);
                     if (isset($outputList['errcode']) && $outputList['errcode'] == 87014) {
-                        Users::$error_msg = $outputList['errmsg'] ?? '昵称不合法';
+                        Users::$error_msg = $nickname.'含违禁词';
                         return false;
                     }
                 }
