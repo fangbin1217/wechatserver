@@ -209,10 +209,10 @@ class Scores  extends \yii\db\ActiveRecord
             }
 
             if ($max > 0) {
-                $max += 5;
+                $max += 100;
             }
             if ($min < 0) {
-                $min -= 5;
+                $min -= 100;
             }
 
             $title2 = [];

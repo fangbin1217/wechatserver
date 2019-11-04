@@ -203,6 +203,38 @@ class Users  extends \yii\db\ActiveRecord
                 }
             }
 
+            if ($nickname) {
+                //check is  or not ok
+                $accessToken = Users::createXCX();
+
+                $data_list = ['content'=> $nickname];
+                $data_string = json_encode($data_list);
+                $url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token=$accessToken";
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                        'Content-Type: application/json',
+                    )
+                );
+
+                $output = curl_exec($ch);
+                $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                echo $output;exit;
+                curl_close($ch);
+                if ($output) {
+                    $outputList = json_decode($output, true);
+                    if (isset($outputList['errcode']) && $outputList['errcode'] == 87014) {
+                        Users::$error_msg = $outputList['errmsg'] ?? '昵称不合法';
+                        return false;
+                    }
+                }
+            }
+
             if (!$nickname) {
                 $nickname = Users::getNickname($cur_user_id);
             }
@@ -215,13 +247,13 @@ class Users  extends \yii\db\ActiveRecord
 
 
         if (!$binded_user_id) {
-            Users::$error_msg = '被绑定用户ID不存在';
+            Users::$error_msg = '用户不存在';
             return false;
         }
 
         $userInfo = Users::getUserInfo($binded_user_id);
         if (!$userInfo) {
-            Users::$error_msg = '被绑定用户数据不存在';
+            Users::$error_msg = '用户不存在';
             return false;
         }
 
@@ -253,7 +285,7 @@ class Users  extends \yii\db\ActiveRecord
                 $Rooms->update_time = $date;
                 $Rooms->expire_time = $time;
                 if (!$Rooms->save()) {
-                    Users::$error_msg = '保存房间数据失败';
+                    Users::$error_msg = '保存房间失败';
                     return false;
                 }
                 $room_id = $Rooms->id;
@@ -273,7 +305,7 @@ class Users  extends \yii\db\ActiveRecord
                 return true;
             } catch (Exception $E) {
                 $trans->rollBack();
-                Users::$error_msg = '批量保存绑定失败';
+                Users::$error_msg = '批量保存失败';
                 return false;
             }
             //添加 owner  self bai
@@ -285,13 +317,13 @@ class Users  extends \yii\db\ActiveRecord
 
                     $myCount = RoomUsers::find()->where(['room_id'=> $room_id, 'is_del'=>0, 'user_id'=>$cur_user_id])->count();
                     if ($myCount) {
-                        Users::$error_msg = '当前用户已绑定';
+                        Users::$error_msg = '用户已绑定';
                         return false;
                     }
 
                     $RoomUsersCount = RoomUsers::find()->where(['room_id'=> $room_id, 'is_del'=>0])->count();
                     if ($RoomUsersCount >= Yii::$app->params['MAX_PERSON_NUM']) {
-                        Users::$error_msg = '限定人数上限4人';
+                        Users::$error_msg = '人数已满！';
                         return false;
                     }
                     $mySort = $RoomUsersCount;
@@ -332,11 +364,11 @@ class Users  extends \yii\db\ActiveRecord
 
 
             } elseif ($room['status'] == Rooms::STATUS_BEGINING) {
-                Users::$error_msg = '房间状态进行中，不可绑定';
+                Users::$error_msg = '房间开房中！';
                 return false;
             }
         }
-        Users::$error_msg = '绑定失败';
+        Users::$error_msg = '绑定出错';
         return false;
 
     }

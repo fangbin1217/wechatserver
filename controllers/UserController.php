@@ -21,6 +21,7 @@ class UserController extends Controller
         $access_token = $params['access_token'] ?? '';
         $nickname = $params['nickname'] ?? '';
         $nickname = trim($nickname);
+        $nickname = mb_substr($nickname, 0, Yii::$app->params['MAX_NICKNAME']);
         $avatar = $params['avatar'] ?? '';
         $avatar = trim($avatar);
         if (!$avatar) {
@@ -69,7 +70,8 @@ class UserController extends Controller
                         'colorClass' => $getColorClass,
                         'isLogin' => true,
                         'box' => getRandData(true),
-                        'isChecked' => Yii::$app->params['isChecked']
+                        'isChecked' => Yii::$app->params['isChecked'],
+                        'notice' => Yii::$app->params['notice']
                     ];
 
                     if ($this->jsonResponse['data']['isLogin']) {
@@ -145,7 +147,8 @@ class UserController extends Controller
                     'localAvatar' => $local_avatar,
                     'isLogin' => false,
                     'box' => getRandData(true),
-                    'isChecked' => Yii::$app->params['isChecked']
+                    'isChecked' => Yii::$app->params['isChecked'],
+                    'notice' => Yii::$app->params['notice']
                 ];
 
 
@@ -386,10 +389,7 @@ class UserController extends Controller
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = '添加玩家成功';
                 } else {
-                    if ($this->jsonResponse['data']['isFull'] == 1) {
-                        $this->jsonResponse['msg'] = '人数已满！';
-                    }
-
+                    $this->jsonResponse['msg'] = Users::$error_msg;
                 }
 
 

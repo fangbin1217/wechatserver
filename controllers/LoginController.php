@@ -84,7 +84,8 @@ class LoginController extends Controller
                         'localAvatar' => $avatar,
                         'isLogin' => false,
                         'box' => getRandData(true),
-                        'isChecked' => Yii::$app->params['isChecked']
+                        'isChecked' => Yii::$app->params['isChecked'],
+                        'notice' => Yii::$app->params['notice']
                     ];
 
                     $cacheList = Users::getUserInfo($users->id);
@@ -128,7 +129,8 @@ class LoginController extends Controller
                         'localAvatar' => $local_avatar,
                         'isLogin' => false,
                         'box' => getRandData(true),
-                        'isChecked' => Yii::$app->params['isChecked']
+                        'isChecked' => Yii::$app->params['isChecked'],
+                        'notice' => Yii::$app->params['notice']
                     ];
 
 
