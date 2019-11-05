@@ -18,7 +18,10 @@ class Scores  extends \yii\db\ActiveRecord
     }
 
     //最近的已结束记录
-    public function getLastRecord($user_id, $version = '') {
+    public function getLastRecord($user_id, $isLogin = false) {
+        if (!$isLogin) {
+            return [];
+        }
         $lastCache = Yii::$app->redis->get('LAST#' . $user_id);
         if ($lastCache) {
             return json_decode($lastCache, true);
@@ -123,14 +126,6 @@ class Scores  extends \yii\db\ActiveRecord
                 foreach ($tmp as $key=>$vv) {
                     $tmp2[] = ['times'=>$key, 'list'=>$vv];
                 }
-
-                /*
-                if (vesionInt($version) >= 190) {
-                    $result = ['score' => $tmp2, 'total' => $total];
-                } else {
-                    $result = ['score' => $tmp, 'total' => $total];
-                }
-                */
                 $result = ['score' => $tmp2, 'total' => $total];
 
             }
@@ -142,7 +137,10 @@ class Scores  extends \yii\db\ActiveRecord
     }
 
     //获取历史统计记录汇总(近1年的)
-    public function getLastYearScore2($user_id, $vip) {
+    public function getLastYearScore2($user_id, $vip, $isLogin = false) {
+        if (!$isLogin) {
+            return [];
+        }
         $res = [];
         $result = [];
 
@@ -338,9 +336,10 @@ class Scores  extends \yii\db\ActiveRecord
         return $res;
     }
 
-    public function myResults($user_id) {
-        $result = [];
-
+    public function myResults($user_id, $isLogin = false) {
+        if (!$isLogin) {
+            return [];
+        }
         $lastCache = Yii::$app->redis->get('RESULTS#' . $user_id);
         if ($lastCache) {
             return json_decode($lastCache, true);

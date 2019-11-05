@@ -34,8 +34,18 @@ class ScoreController extends Controller
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
-
-                $getLastRecord = (new Scores())->getLastRecord($cacheList['id'], $version);
+                $isLogin = false;
+                if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
+                    $avatarUpdTime = $cacheList['avatar_updtime'] ?? '';
+                    $avatarUpdTime = (int) $avatarUpdTime;
+                    if ($avatarUpdTime) {
+                        $be = time() - $avatarUpdTime;
+                        if ($be < Yii::$app->params['loginCacheTime']) {
+                            $isLogin = true;
+                        }
+                    }
+                }
+                $getLastRecord = (new Scores())->getLastRecord($cacheList['id'], $isLogin);
                 if ($getLastRecord) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get lastrecord success';
@@ -58,7 +68,18 @@ class ScoreController extends Controller
             $cache = Yii::$app->redis->get('T#' . $access_token);
             if ($cache) {
                 $cacheList = json_decode($cache, true);
-                $myResults = (new Scores())->myResults($cacheList['id']);
+                $isLogin = false;
+                if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
+                    $avatarUpdTime = $cacheList['avatar_updtime'] ?? '';
+                    $avatarUpdTime = (int) $avatarUpdTime;
+                    if ($avatarUpdTime) {
+                        $be = time() - $avatarUpdTime;
+                        if ($be < Yii::$app->params['loginCacheTime']) {
+                            $isLogin = true;
+                        }
+                    }
+                }
+                $myResults = (new Scores())->myResults($cacheList['id'], $isLogin);
                 if ($myResults) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get results success';
@@ -107,7 +128,19 @@ class ScoreController extends Controller
                 $cacheList = json_decode($cache, true);
 
                 $vip = $cacheList['vip'] ?? false;
-                $myResults = (new Scores())->getLastYearScore2($cacheList['id'], $vip);
+
+                $isLogin = false;
+                if ($cacheList['avatar'] !== Yii::$app->params['image_default']) {
+                    $avatarUpdTime = $cacheList['avatar_updtime'] ?? '';
+                    $avatarUpdTime = (int) $avatarUpdTime;
+                    if ($avatarUpdTime) {
+                        $be = time() - $avatarUpdTime;
+                        if ($be < Yii::$app->params['loginCacheTime']) {
+                            $isLogin = true;
+                        }
+                    }
+                }
+                $myResults = (new Scores())->getLastYearScore2($cacheList['id'], $vip, $isLogin);
                 if ($myResults) {
                     $this->jsonResponse['code'] = 0;
                     $this->jsonResponse['msg'] = 'get results success';

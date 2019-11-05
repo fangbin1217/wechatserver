@@ -228,7 +228,7 @@ class Users  extends \yii\db\ActiveRecord
                 if ($output) {
                     $outputList = @json_decode($output, true);
                     if (isset($outputList['errcode']) && $outputList['errcode'] == 87014) {
-                        Users::$error_msg = $nickname.'含违禁词';
+                        Users::$error_msg = '名称含违禁词';
                         return false;
                     }
                 }

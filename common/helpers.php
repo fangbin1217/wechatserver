@@ -59,7 +59,7 @@ if (! function_exists('getRandData')) {
         foreach ($data as $val) {
             $datas[] = [
                 'boxClass' => $boxClass[$i],
-                'boxImg' =>  '../../images/'.$val
+                'boxImg' =>  Yii::$app->params['imgHost'].$val
             ];
             $i++;
         }

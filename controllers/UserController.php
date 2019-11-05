@@ -71,7 +71,8 @@ class UserController extends Controller
                         'isLogin' => true,
                         'box' => getRandData(true),
                         'isChecked' => Yii::$app->params['isChecked'],
-                        'notice' => Yii::$app->params['notice']
+                        'notice' => Yii::$app->params['notice'],
+                        'shareImage' => Yii::$app->params['shareImage']
                     ];
 
                     if ($this->jsonResponse['data']['isLogin']) {
@@ -148,7 +149,8 @@ class UserController extends Controller
                     'isLogin' => false,
                     'box' => getRandData(true),
                     'isChecked' => Yii::$app->params['isChecked'],
-                    'notice' => Yii::$app->params['notice']
+                    'notice' => Yii::$app->params['notice'],
+                    'shareImage' => Yii::$app->params['shareImage']
                 ];
 
 

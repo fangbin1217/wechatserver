@@ -85,7 +85,8 @@ class LoginController extends Controller
                         'isLogin' => false,
                         'box' => getRandData(true),
                         'isChecked' => Yii::$app->params['isChecked'],
-                        'notice' => Yii::$app->params['notice']
+                        'notice' => Yii::$app->params['notice'],
+                        'shareImage' => Yii::$app->params['shareImage']
                     ];
 
                     $cacheList = Users::getUserInfo($users->id);
@@ -130,7 +131,8 @@ class LoginController extends Controller
                         'isLogin' => false,
                         'box' => getRandData(true),
                         'isChecked' => Yii::$app->params['isChecked'],
-                        'notice' => Yii::$app->params['notice']
+                        'notice' => Yii::$app->params['notice'],
+                        'shareImage' => Yii::$app->params['shareImage']
                     ];
 
 

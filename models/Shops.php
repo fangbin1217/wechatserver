@@ -17,6 +17,7 @@ class Shops  extends \yii\db\ActiveRecord
     }
 
     static public function shopList($page = 1, $city_name = '',$province_name = '',  $shop_name = '') {
+        /*
         if (!$page) {
             $page = 1;
         }
@@ -76,6 +77,7 @@ class Shops  extends \yii\db\ActiveRecord
             return $result;
         }
         return $result;
+        */
     }
 
     public static function saveComment($params) {
@@ -215,6 +217,7 @@ class Shops  extends \yii\db\ActiveRecord
     }
 
     public function queryShop($params) {
+        /*
         $params['shop_id'] = $params['shop_id'] ?? 0;
 
         if (!$params['shop_id']) {
@@ -247,6 +250,7 @@ class Shops  extends \yii\db\ActiveRecord
             'shops' => $Shops, 'labels' => $labelsList
         ];
         return $res;
+        */
 
     }
 
