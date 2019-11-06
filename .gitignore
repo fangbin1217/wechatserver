@@ -38,3 +38,4 @@ composer.lock
 public/index.php
 /runtime
 yii
+/web/images
