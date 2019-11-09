@@ -203,41 +203,42 @@ class Users  extends \yii\db\ActiveRecord
                 }
             }
 
-            if ($nickname) {
-                //check is  or not ok
-                $accessToken = Users::createXCX();
+            if (!$nickname) {
+                Users::$error_msg = '名称不能为空';
+                return false;
+            }
 
-                $data_list = ['content'=> $nickname];
-                $data_string = json_encode($data_list, JSON_UNESCAPED_UNICODE);
-                $url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token=$accessToken";
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url);
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            //check is  or not ok
+            $accessToken = Users::createXCX();
 
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                        'Content-Type: application/json',
-                    )
-                );
+            $data_list = ['content'=> $nickname];
+            $data_string = json_encode($data_list, JSON_UNESCAPED_UNICODE);
+            $url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token=$accessToken";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-                $output = curl_exec($ch);
-                $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
-                if ($output) {
-                    $outputList = @json_decode($output, true);
-                    if (isset($outputList['errcode']) && $outputList['errcode'] == 87014) {
-                        Users::$error_msg = '名称含违禁词';
-                        return false;
-                    }
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    'Content-Type: application/json',
+                )
+            );
+
+            $output = curl_exec($ch);
+            $codes = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($output) {
+                $outputList = @json_decode($output, true);
+                if (isset($outputList['errcode']) && $outputList['errcode'] == 87014) {
+                    Users::$error_msg = '名称含违禁词';
+                    Users::$isFull = 0;
+                    return false;
                 }
             }
-
-            if (!$nickname) {
-                $nickname = Users::getNickname($cur_user_id);
-            }
         }
+
         Users::$playerName = $nickname;
         if (in_array($cur_user_id, [12,13,14])) {
             Users::$playerAvatar = Users::getAvatar($cur_user_id);
