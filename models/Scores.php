@@ -155,18 +155,17 @@ class Scores  extends \yii\db\ActiveRecord
             $room_ids = array_column($Rooms, 'id');
         }
 
-        $time = date('Y-m-d H:i:s', strtotime('-1 years'));
         if (!$room_ids) {
             if ($vip) {
-                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->orderBy(['id' => SORT_ASC])->asArray()->all();
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->orderBy(['id' => SORT_DESC])->offset(0)->limit(10)->asArray()->all();
             } else {
-                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->orderBy(['id' => SORT_ASC])->asArray()->all();
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->orderBy(['id' => SORT_DESC])->offset(0)->limit(5)->asArray()->all();
             }
         } else {
             if ($vip) {
-                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['not in', 'room_id', $room_ids])->orderBy(['id' => SORT_ASC])->asArray()->all();
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['not in', 'room_id', $room_ids])->orderBy(['id' => SORT_DESC])->offset(0)->limit(10)->asArray()->all();
             } else {
-                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['>', 'create_time', $time])->andWhere(['not in', 'room_id', SORT_ASC])->orderBy(['id' => SORT_DESC])->asArray()->all();
+                $RoomUsers = RoomUsers::find()->select(['id', 'user_id', 'score', 'room_id', 'create_time'])->where(['user_id' => $user_id, 'is_del' => 0])->andWhere(['not in', 'room_id', SORT_ASC])->offset(0)->limit(5)->orderBy(['id' => SORT_DESC])->asArray()->all();
             }
         }
         if ($RoomUsers) {
@@ -345,17 +344,17 @@ class Scores  extends \yii\db\ActiveRecord
             return json_decode($lastCache, true);
         }
 
+        $result = [
+            'totalScore' => 0, 'totalScoreColor'=> Yii::$app->params['red'],
+            'cjScore' => 0, 'cjScoreColor'=> Yii::$app->params['red'],
+            'maxScore'=>0, 'maxScoreColor' => Yii::$app->params['red'],
+            'minScore'=>0, 'minScoreColor' => Yii::$app->params['red'],
+            'jsScore'=>0, 'jsScoreColor' => Yii::$app->params['black'],
+            'timesScore'=>0, 'timesScoreColor' => Yii::$app->params['black']
+        ];
+
         $RoomUsers = RoomUsers::find()->where(['user_id'=>$user_id, 'is_del'=>0])->asArray()->all();
         if ($RoomUsers) {
-
-            $result = [
-                'totalScore' => 0, 'totalScoreColor'=> Yii::$app->params['red'],
-                'cjScore' => 0, 'cjScoreColor'=> Yii::$app->params['red'],
-                'maxScore'=>0, 'maxScoreColor' => Yii::$app->params['red'],
-                'minScore'=>0, 'minScoreColor' => Yii::$app->params['red'],
-                'jsScore'=>0, 'jsScoreColor' => Yii::$app->params['black'],
-                'timesScore'=>0, 'timesScoreColor' => Yii::$app->params['black']
-            ];
 
             $totalTime = 0;
 

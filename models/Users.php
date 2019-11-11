@@ -684,7 +684,7 @@ class Users  extends \yii\db\ActiveRecord
             foreach ($our as $val) {
                 if (!$val['user_id']) {
                     $val['nickname'] = Yii::$app->params['name_fa'];
-                    $val['avatar'] = Yii::$app->params['serverHost'].Yii::$app->params['image_fa'];
+                    $val['avatar'] = Yii::$app->params['image_fa'];
                     $val['vip'] = 0;
                 }
 
